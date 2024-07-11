@@ -18,7 +18,7 @@ def main(state_dir='~/auto_walls/state.json',
     else: # wallpaper is not the first one
         i = state["index"] - 1  # setting wallpaper that was before 
         current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
-        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, config["change_keyboard"])
+        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, config["change_backlight"])
 
 
 if __name__ == '__main__':

@@ -24,7 +24,7 @@ def main(state_dir='~/auto_walls/state.json',
                 reset_state(wallpapers_dir, state_dir)
                 continue
             
-        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, config["change_keyboard"])
+        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, config["change_backlight"])
         break
 
 if __name__ == '__main__':
