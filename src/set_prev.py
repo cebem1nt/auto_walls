@@ -1,4 +1,4 @@
-from auto_walls import StateParser, ConfigParser, _write_to_state
+from auto_walls import StateParser, ConfigParser, set_wallpaper
 import os
 
 
@@ -18,11 +18,8 @@ def main(state_dir='~/auto_walls/state.json',
     else: # wallpaper is not the first one
         i = state["index"] - 1  # setting wallpaper that was before 
         current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
-        cli = config["wallpapers_cli"].replace("<picture>", f"'{current_wallpaper}'")
+        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, config["change_keyboard"])
 
-        os.system(cli)
-        _write_to_state("index", i, state_dir) # 
-        print(f'changed wallpaper, index : {i}')
 
 if __name__ == '__main__':
     main()

@@ -27,10 +27,10 @@ class ConfigParser(Parser):
 
         if not config:
             config = {
-                "intervall"      : 30,
-                "wallpapers_dir" : "~/Pictures",
-                "wallpapers_cli" : "swww img <picture>",
-                "change_keyboard": False
+                "intervall"          : 30,
+                "wallpapers_dir"     : "~/Pictures",
+                "wallpapers_cli"     : "swww img <picture>",
+                "change_backlight"   : False
             }
 
             with open(self.dir, 'w') as f: # writing default config
@@ -53,7 +53,7 @@ class StateParser(Parser):
 
         return state
 
-def _write_to_state(param, value, state_dir: str):
+def write_to_state(param, value, state_dir: str):
     state_dir = os.path.expanduser(state_dir)
 
     state = StateParser(state_dir).parse_state()
@@ -62,7 +62,7 @@ def _write_to_state(param, value, state_dir: str):
     with open(state_dir, 'w') as f:
         f.write(json.dumps(state))
     
-def _reset_state(wallpapers_dir: str, state_dir: str):
+def reset_state(wallpapers_dir: str, state_dir: str):
     state_dir = os.path.expanduser(state_dir)
     wallpapers = []
 
@@ -74,8 +74,22 @@ def _reset_state(wallpapers_dir: str, state_dir: str):
         raise FileNotFoundError(f'There are no wallpapers in {wallpapers_dir}')
     else:
         random.shuffle(wallpapers)
-        _write_to_state("wallpapers", wallpapers, state_dir)
-        _write_to_state("index", 0, state_dir)
+        write_to_state("wallpapers", wallpapers, state_dir)
+        write_to_state("index", 0, state_dir)
+
+def set_wallpaper(wallpapers_command: str, current_wallpaper: str,
+                  index: int, state_dir: str, change_backlight=False):
+    
+    cli = wallpapers_command.replace("<picture>", f"'{current_wallpaper}'")
+    os.system(cli)
+
+    if change_backlight:
+        from kb_backlight import set_backlight
+        set_backlight(current_wallpaper)
+
+
+    write_to_state("index", index, state_dir)
+    print(f'changed wallpaper, index : {index}')
 
 def main(state_dir='~/auto_walls/state.json', 
          config_dir='~/.config/auto_walls/config.json'):
@@ -87,7 +101,7 @@ def main(state_dir='~/auto_walls/state.json',
         wallpapers_dir = os.path.expanduser(config["wallpapers_dir"])
 
         if len(state["wallpapers"]) == 0: # no state, first run
-            _reset_state(wallpapers_dir, state_dir)
+            reset_state(wallpapers_dir, state_dir)
             continue
 
         else: #there are wallpapers 
@@ -96,13 +110,10 @@ def main(state_dir='~/auto_walls/state.json',
                 current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
 
             except: #index out of range
-               _reset_state(wallpapers_dir, state_dir)
+               reset_state(wallpapers_dir, state_dir)
                continue
             
-        cli = config["wallpapers_cli"].replace("<picture>", f"'{current_wallpaper}'")
-        os.system(cli)
-        _write_to_state("index", i, state_dir)
-        print(f'changed wallpaper, index : {i}')
+        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, change_backlight=config["change_backlight"])
         time.sleep(config["intervall"] * 60)
 
 

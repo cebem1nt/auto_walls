@@ -1,4 +1,4 @@
-from auto_walls import StateParser, ConfigParser, _reset_state, _write_to_state
+from auto_walls import StateParser, ConfigParser, reset_state, set_wallpaper
 import os
 
 
@@ -12,7 +12,7 @@ def main(state_dir='~/auto_walls/state.json',
         wallpapers_dir = os.path.expanduser(config["wallpapers_dir"])
 
         if len(state["wallpapers"]) == 0: # asuming that no state, first run
-            _reset_state(wallpapers_dir, state_dir)
+            reset_state(wallpapers_dir, state_dir)
             continue
 
         else: #there are wallpapers 
@@ -21,13 +21,10 @@ def main(state_dir='~/auto_walls/state.json',
                 current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
 
             except: #index out of range
-                _reset_state(wallpapers_dir, state_dir)
+                reset_state(wallpapers_dir, state_dir)
                 continue
             
-        cli = config["wallpapers_cli"].replace("<picture>", f"'{current_wallpaper}'")
-        os.system(cli)
-        _write_to_state("index", i, state_dir)
-        print(f'changed wallpaper, index : {i}')
+        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, config["change_keyboard"])
         break
 
 if __name__ == '__main__':
