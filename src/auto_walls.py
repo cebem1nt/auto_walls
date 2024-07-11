@@ -53,21 +53,24 @@ class StateParser(Parser):
 
         return state
 
-def _write_to_state(param, value, dir):
-    state = StateParser(dir).parse_state()
+def _write_to_state(param, value, state_dir: str):
+    state_dir = os.path.expanduser(state_dir)
+
+    state = StateParser(state_dir).parse_state()
     state[param] = value
 
-    with open(dir, 'w') as f:
+    with open(state_dir, 'w') as f:
         f.write(json.dumps(state))
     
 def _reset_state(wallpapers_dir: str, state_dir: str):
+    state_dir = os.path.expanduser(state_dir)
     wallpapers = []
 
     for w in os.listdir(wallpapers_dir):
         if os.path.isfile(os.path.join(wallpapers_dir, w)):
             wallpapers.append(w)
 
-    if len(wallpapers) == 0:
+    if len(wallpapers) == 0: # no wallpapers at all
         raise FileNotFoundError(f'There are no wallpapers in {wallpapers_dir}')
     else:
         random.shuffle(wallpapers)
@@ -77,9 +80,6 @@ def _reset_state(wallpapers_dir: str, state_dir: str):
 def main(state_dir='~/auto_walls/state.json', 
          config_dir='~/.config/auto_walls/config.json'):
 
-    state_dir = os.path.expanduser(state_dir)
-    config_dir = os.path.expanduser(config_dir)
-
     while True:
         state  = StateParser(state_dir).parse_state()
         config = ConfigParser(config_dir).parse_config()
@@ -88,9 +88,10 @@ def main(state_dir='~/auto_walls/state.json',
 
         if len(state["wallpapers"]) == 0: # no state, first run
             _reset_state(wallpapers_dir, state_dir)
+            continue
 
         else: #there are wallpapers 
-            i = state["index"]
+            i = state["index"] + 1
             try:
                 current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
 
@@ -100,7 +101,7 @@ def main(state_dir='~/auto_walls/state.json',
             
         cli = config["wallpapers_cli"].replace("<picture>", f"'{current_wallpaper}'")
         os.system(cli)
-        _write_to_state("index", i+1, state_dir)
+        _write_to_state("index", i, state_dir)
         print(f'changed wallpaper, index : {i}')
         time.sleep(config["intervall"] * 60)
 
