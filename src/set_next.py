@@ -7,11 +7,11 @@ def main(state_dir='~/auto_walls/state.json',
     
     while True:
         state  = StateParser(state_dir).parse_state()
-        config = ConfigParser(config_dir).parse_config()
+        c = ConfigParser(config_dir).parse_config()
 
-        wallpapers_dir = os.path.expanduser(config["wallpapers_dir"])
+        wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
 
-        if len(state["wallpapers"]) == 0: # asuming that no state, first run
+        if state["index"] == -2: # no state, first run
             reset_state(wallpapers_dir, state_dir)
             continue
 
@@ -24,7 +24,7 @@ def main(state_dir='~/auto_walls/state.json',
                 reset_state(wallpapers_dir, state_dir)
                 continue
             
-        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, config["change_backlight"])
+        set_wallpaper(c["wallpapers_cli"], current_wallpaper, i, state_dir, c["change_backlight"], c["backlight_transition"])
         break
 
 if __name__ == '__main__':

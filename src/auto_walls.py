@@ -1,17 +1,15 @@
-import os, json, random, time
+import os, json, random, time, subprocess
 
 class Parser:
     def __init__(self, dir) -> None:
         self.dir = os.path.expanduser(dir)
 
-    def ensure_dir_exists(self):
+    def parse(self):
         if not os.path.exists(os.path.dirname(self.dir)):
             os.makedirs(os.path.dirname(self.dir))
             with open(self.dir, 'w') as f:
                 pass
 
-    def parse(self):
-        self.ensure_dir_exists()
         with open(self.dir) as f:
             try:
                 return json.load(f)
@@ -25,12 +23,14 @@ class ConfigParser(Parser):
     def parse_config(self):
         config = self.parse()
 
-        if not config:
+        if not config: # generating default config file
             config = {
-                "intervall"          : 30,
-                "wallpapers_dir"     : "~/Pictures",
-                "wallpapers_cli"     : "swww img <picture>",
-                "change_backlight"   : False
+                "intervall"           : 30,
+                "wallpapers_dir"      : "~/Pictures",
+                "wallpapers_cli"      : "swww img <picture>",
+                "change_backlight"    : False,
+                "notify"              : False,
+                "backlight_transition": False,
             }
 
             with open(self.dir, 'w') as f: # writing default config
@@ -45,15 +45,15 @@ class StateParser(Parser):
     def parse_state(self):
         state = self.parse()
 
-        if not state:
+        if not state: # default state
             state = {
                 "wallpapers": [],
-                "index"     : -1
+                "index"     : -2
             }
 
         return state
 
-def write_to_state(param, value, state_dir: str):
+def write_to_state(param: str, value: any, state_dir: str):
     state_dir = os.path.expanduser(state_dir)
 
     state = StateParser(state_dir).parse_state()
@@ -75,17 +75,17 @@ def reset_state(wallpapers_dir: str, state_dir: str):
     else:
         random.shuffle(wallpapers)
         write_to_state("wallpapers", wallpapers, state_dir)
-        write_to_state("index", 0, state_dir)
+        write_to_state("index", -1, state_dir)
 
-def set_wallpaper(wallpapers_command: str, current_wallpaper: str,
-                  index: int, state_dir: str, change_backlight=False):
+def set_wallpaper(wallpapers_command: str, current_wallpaper: str, index: int, 
+                  state_dir: str, change_backlight=False, backlight_transition=False):
     
-    cli = wallpapers_command.replace("<picture>", f"'{current_wallpaper}'")
-    os.system(cli)
+    cli = wallpapers_command.replace("<picture>", f"{current_wallpaper}")
+    subprocess.run(cli.split())
 
     if change_backlight:
         from kb_backlight import set_backlight
-        set_backlight(current_wallpaper)
+        set_backlight(state_dir, current_wallpaper, backlight_transition)
 
 
     write_to_state("index", index, state_dir)
@@ -96,11 +96,11 @@ def main(state_dir='~/auto_walls/state.json',
 
     while True:
         state  = StateParser(state_dir).parse_state()
-        config = ConfigParser(config_dir).parse_config()
+        c = ConfigParser(config_dir).parse_config()
 
-        wallpapers_dir = os.path.expanduser(config["wallpapers_dir"])
+        wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
 
-        if len(state["wallpapers"]) == 0: # no state, first run
+        if state["index"] == -2 : # no state, first run
             reset_state(wallpapers_dir, state_dir)
             continue
 
@@ -112,9 +112,9 @@ def main(state_dir='~/auto_walls/state.json',
             except: #index out of range
                reset_state(wallpapers_dir, state_dir)
                continue
-            
-        set_wallpaper(config["wallpapers_cli"], current_wallpaper, i, state_dir, change_backlight=config["change_backlight"])
-        time.sleep(config["intervall"] * 60)
+        
+        set_wallpaper(c["wallpapers_cli"], current_wallpaper, i, state_dir, c["change_backlight"], c["backlight_transition"])
+        time.sleep(c["intervall"] * 60)
 
 
 if __name__ == '__main__':
