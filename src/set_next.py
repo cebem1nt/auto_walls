@@ -2,7 +2,7 @@ from auto_walls import StateParser, ConfigParser, reset_state, set_wallpaper
 import os
 
 
-def main(state_dir='~/auto_walls/state.json',
+def main(state_dir='~/.auto_walls/state.json',
          config_dir='~/.config/auto_walls/config.json'):
     
     while True:

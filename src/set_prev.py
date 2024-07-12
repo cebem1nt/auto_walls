@@ -1,8 +1,8 @@
-from auto_walls import StateParser, ConfigParser, set_wallpaper
+from auto_walls import StateParser, ConfigParser, set_wallpaper, reset_state
 import os, subprocess
 
 
-def main(state_dir='~/auto_walls/state.json',
+def main(state_dir='~/.auto_walls/state.json',
          config_dir='~/.config/auto_walls/config.json'):
 
     state  = StateParser(state_dir).parse_state()
@@ -11,16 +11,20 @@ def main(state_dir='~/auto_walls/state.json',
     wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
 
     if len(state["wallpapers"]) == 0 or state["index"] <= 0 : # there are no wallpapers or
-        print("Cant set previous wallpaper!")                 # allready first wallpaper
-        print("index: ", state["index"])
-        if c["notify"]:
-            subprocess.run(["notify-send", "Cant set previous wallpaper!"])
-        return
+                                                              # allready first wallpaper
+        reset_state(wallpapers_dir, state_dir)
 
-    else: # wallpaper is not the first one
+        if c["notify"]:
+            subprocess.run(["notify-send", "Shuffling wallpapers.."])
+
+        state  = StateParser(state_dir).parse_state()
+        i = len(state["wallpapers"]) - 1 # going from the end
+
+    else:
         i = state["index"] - 1  # setting wallpaper that was before 
-        current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
-        set_wallpaper(c["wallpapers_cli"], current_wallpaper, i, state_dir, c["change_backlight"], c["backlight_transition"])
+
+    current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
+    set_wallpaper(c["wallpapers_cli"], current_wallpaper, i, state_dir, c["change_backlight"], c["backlight_transition"])
 
 
 if __name__ == '__main__':

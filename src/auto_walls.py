@@ -91,7 +91,7 @@ def set_wallpaper(wallpapers_command: str, current_wallpaper: str, index: int,
     write_to_state("index", index, state_dir)
     print(f'changed wallpaper, index : {index}')
 
-def main(state_dir='~/auto_walls/state.json', 
+def main(state_dir='~/.auto_walls/state.json', 
          config_dir='~/.config/auto_walls/config.json'):
 
     while True:
@@ -114,6 +114,10 @@ def main(state_dir='~/auto_walls/state.json',
                continue
         
         set_wallpaper(c["wallpapers_cli"], current_wallpaper, i, state_dir, c["change_backlight"], c["backlight_transition"])
+
+        if c["intervall"] == 0: # dont cycle wallpapers, initialize system and say chao
+            return
+
         time.sleep(c["intervall"] * 60)
 
 
