@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os, json, random, time, subprocess
 
 class Parser:
@@ -31,6 +33,7 @@ class ConfigParser(Parser):
                 "change_backlight"    : False,
                 "notify"              : False,
                 "backlight_transition": False,
+                "rofi-theme"          : ""
             }
 
             with open(self.dir, 'w') as f: # writing default config
@@ -48,7 +51,7 @@ class StateParser(Parser):
         if not state: # default state
             state = {
                 "wallpapers": [],
-                "index"     : -2
+                "index"     : -2,
             }
 
         return state
@@ -62,12 +65,16 @@ def write_to_state(param: str, value: any, state_dir: str):
     with open(state_dir, 'w') as f:
         f.write(json.dumps(state))
     
-def reset_state(wallpapers_dir: str, state_dir: str):
+def reset_state(wallpapers_dir: str, state_dir: str, notify=False):
     state_dir = os.path.expanduser(state_dir)
     wallpapers = []
+        
+    if notify:
+        subprocess.run(["notify-send", "Shuffling wallpapers.."])
 
     for w in os.listdir(wallpapers_dir):
         if os.path.isfile(os.path.join(wallpapers_dir, w)):
+            w = os.path.join(wallpapers_dir, w) # now they are complete dirs
             wallpapers.append(w)
 
     if len(wallpapers) == 0: # no wallpapers at all
@@ -101,19 +108,20 @@ def main(state_dir='~/.auto_walls/state.json',
         wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
 
         if state["index"] == -2 : # no state, first run
-            reset_state(wallpapers_dir, state_dir)
+            reset_state(wallpapers_dir, state_dir, c["notify"])
             continue
 
         else: #there are wallpapers 
             i = state["index"] + 1
             try:
-                current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
+                current_wallpaper = state["wallpapers"][i]
 
             except: #index out of range
-               reset_state(wallpapers_dir, state_dir)
+               reset_state(wallpapers_dir, state_dir, c["notify"])
                continue
         
-        set_wallpaper(c["wallpapers_cli"], current_wallpaper, i, state_dir, c["change_backlight"], c["backlight_transition"])
+        set_wallpaper(c["wallpapers_cli"], 
+                      current_wallpaper, i, state_dir, c["change_backlight"], c["backlight_transition"])
 
         if c["intervall"] == 0: # dont cycle wallpapers, initialize system and say chao
             return

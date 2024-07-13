@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 from auto_walls import StateParser, ConfigParser, reset_state, set_wallpaper
 import os
 
@@ -12,16 +14,16 @@ def main(state_dir='~/.auto_walls/state.json',
         wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
 
         if state["index"] == -2: # no state, first run
-            reset_state(wallpapers_dir, state_dir)
+            reset_state(wallpapers_dir, state_dir, c["notify"])
             continue
 
         else: #there are wallpapers 
             i = state["index"] + 1
             try:
-                current_wallpaper = os.path.join(wallpapers_dir, state["wallpapers"][i])
+                current_wallpaper = state["wallpapers"][i]
 
             except: #index out of range
-                reset_state(wallpapers_dir, state_dir)
+                reset_state(wallpapers_dir, state_dir, c["notify"])
                 continue
             
         set_wallpaper(c["wallpapers_cli"], current_wallpaper, i, state_dir, c["change_backlight"], c["backlight_transition"])
