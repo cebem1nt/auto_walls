@@ -70,7 +70,7 @@ After the first run of `auto_walls.py`, the following config will be generated a
 
 - **"interval"**: Time interval in minutes for changing wallpapers. Set to 0 to disable automatic wallpaper changes.
 - **"wallpapers_dir"**: Directory where wallpapers are stored.
-- **"wallpapers_cli"**: Command to set wallpaper (`<picture>` is placeholder for wallpaper path). Can be customized; for example, for `feh`, use "feh --bg-fill <picture>".
+- **"wallpapers_cli"**: Command to set wallpaper (`<picture>` is placeholder for wallpaper path). Can be customized; for example, for `feh`, use "feh --bg-fill <picture> ".
 - **"keyboard_cli"**: Command to change keyboard color (`<color>` is placeholder).
 - **"keyboard_transition_cli"**: Command for transitioning keyboard backlight color. Example simulates a breathing effect (`<prev>` represents previous color and `<color>` is new color).
 - **"change_backlight"**: Enable/disable keyboard backlight changes.
