@@ -42,10 +42,10 @@ Clone this repository and execute the main script (`auto_walls.py`) on startup w
 ```ini
 exec-once = python3 ~/your/path/to/auto_walls/src/auto_walls.py
 
-bind = $secondMod, F5,       exec, python3 ~/your/path/to/auto_walls/src/set_next.py
-bind = $secondMod SHIFT, F5, exec, python3 ~/your/path/to/auto_walls/src/set_prev.py
+bind = ALT, F5,       exec, python3 ~/your/path/to/auto_walls/src/set_next.py
+bind = ALT SHIFT, F5, exec, python3 ~/your/path/to/auto_walls/src/set_prev.py
 
-bind = $mainMod, Y, exec, python3 ~/your/path/to/auto_walls/src/rofi_selector.py
+bind = SUPER, Y, exec, python3 ~/your/path/to/auto_walls/src/rofi_selector.py
 ```
 
 > **Note:** It's strongly recommended to run `auto_walls.py` from the terminal for the first time.
