@@ -34,6 +34,7 @@ class ConfigParser(Parser):  # a sub class for config parsing
                 "wallpapers_cli"          : "swww img <picture>",
                 "keyboard_cli"            : "rogauracore single_static <color>",
                 "keyboard_transition_cli" : "rogauracore single_breathing <prev> <color> 3",
+                "transition_duration"     : 1.1,
                 "change_backlight"        : False,
                 "notify"                  : True,
                 "backlight_transition"    : False,
@@ -107,7 +108,7 @@ def set_wallpaper(config: dict, state_dir, current_wallpaper: str, index: int): 
     if change_backlight: # running keyboard module to find the best collor and set it
         from kb_backlight import set_backlight
         set_backlight(state_dir, current_wallpaper, backlight_transition,
-                      config["keyboard_cli"], config["keyboard_transition_cli"])
+                      config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
 
     write_to_state("index", index, state_dir)
     print(f'changed wallpaper, index : {index}')

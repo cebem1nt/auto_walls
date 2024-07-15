@@ -19,7 +19,8 @@ def rgb_to_hex(rgb):
     return f"{r:02X}{g:02X}{b:02X}"
 
 def set_backlight(state_dir:str, picture: str, transition: bool, 
-                  keyboard_cli: str, keyboard_transition_cli: str):
+                  keyboard_cli: str, keyboard_transition_cli: str,
+                  transition_duration: float):
     
     color = rgb_to_hex(extract_color(picture))
 
@@ -34,7 +35,7 @@ def set_backlight(state_dir:str, picture: str, transition: bool,
         keyboard_transition_cli = keyboard_transition_cli.replace("<color>", color)
 
         subprocess.run(keyboard_transition_cli.split())
-        time.sleep(1.1)
+        time.sleep(transition_duration)
 
     keyboard_cli = keyboard_cli.replace("<color>", color)
     subprocess.run(keyboard_cli.split())
