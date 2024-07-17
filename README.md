@@ -4,7 +4,7 @@ Auto walls is a Linux wallpaper system for any window manager: flexible and cust
 
 ## Features
 
-- Automatically changes wallpapers.
+- Automatically sets random wallpaper every n minutes.
 - Sets keyboard backlight color based on the wallpaper.
 - Provides scripts for setting previous and next wallpapers.
 - Supports Rofi menu with thumbnails of wallpapers.
