@@ -1,5 +1,5 @@
 # Auto walls
-When using a window manager, wallpapers is a part of it. Maybe you want a menu to choose wallpaper, shuffling, automatically change them, match keyboard backlight to wallpaper's best color, setting next/previous. If so, this is what you're looking for! Auto walls is a Linux wallpaper system for any window manager: flexible and customizable, written entirely in Python.
+**When using a window manager, wallpapers is a part of it. Maybe you want a menu to choose wallpaper, shuffling, automatically change them, match keyboard backlight to wallpaper's best color, setting next/previous. If so, this is what you're looking for! Auto walls is a Linux wallpaper system for any window manager: flexible and customizable, written entirely in Python.**
 
 ## Features
 
