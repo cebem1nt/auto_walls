@@ -4,7 +4,7 @@ Auto walls is a Linux wallpaper system for any window manager: flexible and cust
 
 ## Features
 
-- Automatically changes wallpapers.
+- Automatically sets random wallpaper every n minutes.
 - Sets keyboard backlight color based on the wallpaper.
 - Provides scripts for setting previous and next wallpapers.
 - Supports Rofi menu with thumbnails of wallpapers.
@@ -62,6 +62,7 @@ After the first run of `auto_walls.py`, the following config will be generated a
     "keyboard_cli": "rogauracore single_static <color>",
     "keyboard_transition_cli": "rogauracore single_breathing <prev> <color> 3",
     "change_backlight": false,
+    "transition_duration": 1.1,
     "notify": true,
     "backlight_transition": false,
     "rofi-theme": ""
@@ -70,9 +71,10 @@ After the first run of `auto_walls.py`, the following config will be generated a
 
 - **"interval"**: Time interval in minutes for changing wallpapers. Set to 0 to disable automatic wallpaper changes.
 - **"wallpapers_dir"**: Directory where wallpapers are stored.
-- **"wallpapers_cli"**: Command to set wallpaper (`<picture>` is placeholder for wallpaper path). Can be customized; for example, for `feh`, use "feh --bg-fill <picture> ".
+- **"wallpapers_cli"**: Command to set wallpaper (`<picture>` is placeholder for wallpaper path). Can be customized; for example, for `feh`, use `feh --bg-fill <picture> `.
 - **"keyboard_cli"**: Command to change keyboard color (`<color>` is placeholder).
 - **"keyboard_transition_cli"**: Command for transitioning keyboard backlight color. Example simulates a breathing effect (`<prev>` represents previous color and `<color>` is new color).
+- **"transition_duration"**: Transition duration in seconds. 
 - **"change_backlight"**: Enable/disable keyboard backlight changes.
 - **"notify"**: Enable/disable notifications.
 - **"backlight_transition"**: Enable/disable backlight transition effects.
