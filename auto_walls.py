@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
-import os, json, random, subprocess, sys
+import os, json, random, sys
+from subprocess import run, Popen
 
 class Parser: # a superior class for files parsing 
     def __init__(self, file) -> None:
@@ -81,14 +82,14 @@ def reset_state(wallpapers_dir: str, state_dir: str, notify=False):  # reseting 
 
     if len(wallpapers) == 0: # no wallpapers at all
         if notify:
-            subprocess.run(["notify-send", f"No wallpapers in {wallpapers_dir}", "-a", "wallpaper", "-u", "critical"])
-            subprocess.run(["notify-send", 'Change config file!', "-a", "wallpaper"])
+            run(["notify-send", f"No wallpapers in {wallpapers_dir}", "-a", "wallpaper", "-u", "critical"])
+            run(["notify-send", 'Change config file!', "-a", "wallpaper"])
         raise FileNotFoundError(f'There are no wallpapers in {wallpapers_dir}')
     else:
         random.shuffle(wallpapers)
 
         if notify:
-            subprocess.run(["notify-send", "Shuffling wallpapers..", "-a", "wallpaper"])
+            run(["notify-send", "Shuffling wallpapers..", "-a", "wallpaper"])
 
         write_to_state("wallpapers", wallpapers, state_dir)
         write_to_state("index", -1, state_dir)              
@@ -103,7 +104,7 @@ def set_wallpaper(config: dict, state_dir, current_wallpaper: str, index: int): 
     backlight_transition = config["backlight_transition"]
 
     cli = wallpapers_command.replace("<picture>", f"{current_wallpaper}")
-    subprocess.run(cli.split())
+    run(cli.split())
 
     if change_backlight: # running keyboard module to find the best collor and set it
         from modules.kb_backlight import set_backlight
@@ -118,9 +119,11 @@ def main(config_dir = '~/.config/auto_walls/config.json'):
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     try:
-        subprocess.Popen(f"python3 {current_dir}/_timer.py {c["intervall"]}".split())
+        process = Popen(f"python3 {current_dir}/_timer.py {c["intervall"]}".split())
+        print(f"New timer process started with pid: {process.pid}")
+        
     except Exception as e:
-        print(f"Error while running the script: {e}")
+        print(f"Error while running: {e}")
         sys.exit(1)
 
     sys.exit(0)
