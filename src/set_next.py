@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 from auto_walls import StateParser, ConfigParser, reset_state, set_wallpaper
-import os, argparse
+import os
 
 
-def main(state_dir: str, config_dir: str):
+def main(state_dir='~/.auto_walls/state.json', 
+         config_dir='~/.config/auto_walls/config.json'):
     
     while True:
         state  = StateParser(state_dir).parse_state()
@@ -29,19 +30,4 @@ def main(state_dir: str, config_dir: str):
         break
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(description="""
-                                    A python wallpapers system subscript. 
-                                    Sets the next shuffled wallpaper. Shuffles them if already the last one.
-                                    Additional info can be found at https://github.com/cebem1nt/auto_walls
-                                """)
-
-    p.add_argument('-c', '--config', 
-                   help='Specify the config file', 
-                   default='~/.config/auto_walls/config.json')
-    
-    p.add_argument('-s', '--state', 
-                    help='Specify the state file', 
-                    default='~/.auto_walls/state.json')
-
-    args = p.parse_args()
-    main(state_dir=args.state, config_dir=args.config)
+    main()

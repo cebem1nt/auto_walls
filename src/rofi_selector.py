@@ -4,7 +4,8 @@ from auto_walls import StateParser, ConfigParser, set_wallpaper
 import subprocess, os, argparse
 
 
-def main(state_dir: str, config_dir: str, theme:str):
+def main(theme:str, state_dir='~/.auto_walls/state.json',
+         config_dir='~/.config/auto_walls/config.json'):
 
     c = ConfigParser(config_dir).parse_config()
     state = StateParser(state_dir).parse_state()
@@ -39,24 +40,15 @@ def main(state_dir: str, config_dir: str, theme:str):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description="""
-                                    A python wallpapers system subscript. 
                                     Runs rofi with list of shuffled wallpapers with tumbnails. 
                                     By default takes theme path from config file. 
                                     Theme can be passed as an argument, in this case it will have more priority than config's one.
                                     Additional info can be found at https://github.com/cebem1nt/auto_walls
                                 """)
 
-    p.add_argument('-c', '--config', 
-                   help='Specify the config file', 
-                   default='~/.config/auto_walls/config.json')
-    
-    p.add_argument('-s', '--state', 
-                    help='Specify the state file', 
-                    default='~/.auto_walls/state.json')
-
     p.add_argument('-t', '--theme', 
                     help='Specify the rofi theme file', 
                     default='')
 
     args = p.parse_args()
-    main(state_dir=args.state, config_dir=args.config, theme=args.theme)
+    main(theme=args.theme)

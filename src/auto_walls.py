@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, json, random, time, subprocess, argparse
+import os, json, random, subprocess, sys
 
 class Parser: # a superior class for files parsing 
     def __init__(self, file) -> None:
@@ -113,51 +113,17 @@ def set_wallpaper(config: dict, state_dir, current_wallpaper: str, index: int): 
     write_to_state("index", index, state_dir)
     print(f'changed wallpaper, index : {index}')
 
-def main(config_dir: str, state_dir: str):
-    while True:
-        state  = StateParser(state_dir).parse_state()  # getting current state
-        c = ConfigParser(config_dir).parse_config()    # getting config file
+def main(config_dir = '~/.config/auto_walls/config.json'):
+    c = ConfigParser(config_dir).parse_config()    # getting config file
+    current_dir = os.path.dirname(os.path.abspath(__file__))
 
-        wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
+    try:
+        subprocess.Popen(f"python3 {current_dir}/timer.py {c["intervall"]}".split())
+    except Exception as e:
+        print(f"Error while running the script: {e}")
+        sys.exit(1)
 
-        if state["index"] == -2 : # no state, first run
-            reset_state(wallpapers_dir, state_dir, c["notify"])
-            continue
-
-        else: # there are wallpapers 
-            i = state["index"] + 1
-            try:
-                current_wallpaper = state["wallpapers"][i]
-
-            except: #index out of range
-               reset_state(wallpapers_dir, state_dir, c["notify"])
-               continue
-        
-        set_wallpaper(c, state_dir, current_wallpaper, i)
-
-        if c["intervall"] <= 0: # dont cycle wallpapers, initialize system and say chao
-            return
-
-        time.sleep(c["intervall"] * 60)
-
+    sys.exit(0)
 
 if __name__ == '__main__':
-    p = argparse.ArgumentParser(description="""
-                                    A python wallpapers system main script. 
-                                    Sets all the system, and changes wallpapers every intervall specified in the config file. 
-                                    By default works as background daemon, but will not if intervall is set to 0. 
-                                    all additional params can be set in the config file, default location is '~/.config/auto_walls/config.json'. 
-                                    Default config file will be generated after first run.
-                                    Additional info can be found at https://github.com/cebem1nt/auto_walls
-                                """)
-
-    p.add_argument('-c', '--config', 
-                   help='Specify the config file', 
-                   default='~/.config/auto_walls/config.json')
-    
-    p.add_argument('-s', '--state', 
-                    help='Specify the state file', 
-                    default='~/.auto_walls/state.json')
-
-    args = p.parse_args()
-    main(state_dir=args.state, config_dir=args.config)
+    main()
