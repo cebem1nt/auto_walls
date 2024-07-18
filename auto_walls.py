@@ -106,7 +106,7 @@ def set_wallpaper(config: dict, state_dir, current_wallpaper: str, index: int): 
     subprocess.run(cli.split())
 
     if change_backlight: # running keyboard module to find the best collor and set it
-        from kb_backlight import set_backlight
+        from modules.kb_backlight import set_backlight
         set_backlight(state_dir, current_wallpaper, backlight_transition,
                       config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
 
@@ -118,7 +118,7 @@ def main(config_dir = '~/.config/auto_walls/config.json'):
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     try:
-        subprocess.Popen(f"python3 {current_dir}/timer.py {c["intervall"]}".split())
+        subprocess.Popen(f"python3 {current_dir}/_timer.py {c["intervall"]}".split())
     except Exception as e:
         print(f"Error while running the script: {e}")
         sys.exit(1)
