@@ -98,21 +98,26 @@ def reset_state(wallpapers_dir: str, state_dir: str, notify=False):  # reseting 
         # so index of next one will be previous + 1
         # in this case we will get 0, which is the first wallpaper 
 
-def set_wallpaper(config: dict, state_dir, current_wallpaper: str, index: int):  # a function to set wallpaper and manage 
-    wallpapers_command = config["wallpapers_cli"]                                # next steps based on the config file
+def set_wallpaper(config: dict, state_dir:  str, 
+                  current_wallpaper: str, index: int, do_write_to_state=True):  
+    
+    # a function to set wallpaper and manage next steps based on the config file
+    wallpapers_command = config["wallpapers_cli"] 
     change_backlight = config["change_backlight"]
     backlight_transition = config["backlight_transition"]
 
-    cli = wallpapers_command.replace("<picture>", f"{current_wallpaper}")
+    cli = wallpapers_command.replace("<picture>", current_wallpaper)
     run(cli.split())
 
-    if change_backlight: # running keyboard module to find the best collor and set it
+    if change_backlight: 
+    # running keyboard module to find the best collor and set it
         from modules.kb_backlight import set_backlight
         set_backlight(state_dir, current_wallpaper, backlight_transition,
                       config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
 
-    write_to_state("index", index, state_dir)
-    print(f'changed wallpaper, index : {index}')
+    if do_write_to_state:
+        write_to_state("index", index, state_dir)
+        print(f'changed wallpaper, index : {index}')
 
 def main(config_dir = '~/.config/auto_walls/config.json'):
     c = ConfigParser(config_dir).parse_config()    # getting config file

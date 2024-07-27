@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from auto_walls import StateParser, ConfigParser, set_wallpaper, reset_state
-import os, argparse
+import os
 
 
 def main(state_dir='~/.auto_walls/state.json', 
