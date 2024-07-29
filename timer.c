@@ -1,30 +1,31 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h> // For sleep() and fork()
-#include <string.h>
+#include <unistd.h> // For sleep(), fork(), access(), readlink()
 #include <sys/wait.h> // For waitpid()
+#include <string.h>
+#include <libgen.h> // For dirname()
 
-// Define a reasonable buffer size if PATH_MAX is not available
 #define MAX_PATH_LENGTH 4096
+#define ERROR_EXIT(msg) { perror(msg); exit(EXIT_FAILURE); }
 
 void execute_command(const char *command) {
     pid_t pid = fork();
 
     if (pid < 0) {
-        perror("fork() error");
-        exit(EXIT_FAILURE);
+        ERROR_EXIT("fork() error");
     }
 
     if (pid == 0) {
         // Child process
         execlp("python3", "python3", command, (char *)NULL);
         // If execlp returns, an error occurred
-        perror("execlp() error");
-        exit(EXIT_FAILURE);
+        ERROR_EXIT("execlp() error");
     } else {
         // Parent process
         int status;
-        waitpid(pid, &status, 0); // Wait for child process to complete
+        if (waitpid(pid, &status, 0) == -1) {
+            ERROR_EXIT("waitpid() error");
+        }
         if (WIFEXITED(status)) {
             printf("Child process exited with status %d\n", WEXITSTATUS(status));
         } else {
@@ -33,19 +34,19 @@ void execute_command(const char *command) {
     }
 }
 
-void timer(int secs) {
-    char current_dir[MAX_PATH_LENGTH];
-    if (getcwd(current_dir, sizeof(current_dir)) == NULL) {
-        perror("getcwd() error");
-        exit(EXIT_FAILURE);
-    }
-    
+void timer(int secs, const char *script_dir) {
     while (1) {
         sleep(secs * 60);
 
         // Build the command string
-        char command[MAX_PATH_LENGTH + 20];
-        snprintf(command, sizeof(command), "%s/set_next.py", current_dir);
+        char command[MAX_PATH_LENGTH];
+        snprintf(command, sizeof(command), "%s/set_next.py", script_dir);
+
+        // Check if the file exists
+        if (access(command, F_OK) != 0) {
+            fprintf(stderr, "File %s does not exist.\n", command);
+            continue;
+        }
 
         // Execute the command
         execute_command(command);
@@ -64,6 +65,19 @@ int main(int argc, char *argv[]) {
         return EXIT_FAILURE;
     }
 
-    timer(time);
+    // Get the directory of the currently running executable
+    char exe_path[MAX_PATH_LENGTH];
+    ssize_t len = readlink("/proc/self/exe", exe_path, sizeof(exe_path) - 1);
+    if (len == -1) {
+        ERROR_EXIT("readlink() error");
+    }
+    exe_path[len] = '\0'; // Null-terminate the path
+
+    // Extract the directory from the executable path
+    char *dir = dirname(exe_path);
+
+    // Start the timer with the directory containing set_next.py
+    timer(time, dir);
+
     return EXIT_SUCCESS;
 }
