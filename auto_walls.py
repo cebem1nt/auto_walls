@@ -124,7 +124,7 @@ def main(config_dir = '~/.config/auto_walls/config.json'):
     current_dir = os.path.dirname(os.path.abspath(__file__))
 
     try:
-        process = Popen(f"python3 {current_dir}/_timer.py {c["intervall"]}".split())
+        process = Popen(f"{current_dir}/timer {c["intervall"]}".split())
         print(f"New timer process started with pid: {process.pid}")
         
     except Exception as e:
