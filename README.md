@@ -5,7 +5,7 @@
 > [!WARNING]  
 > I have no clue about c. The following code of timer is written by chatGPT. Use with cautions
 
-###Instructions 
+### Instructions 
 
 ```
 gcc -o timer timer.c
