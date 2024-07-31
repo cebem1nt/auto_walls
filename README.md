@@ -1,16 +1,6 @@
 # Auto walls
 **When using a window manager, wallpapers is a part of it. Maybe you want a menu to choose wallpaper, shuffling, automatically change them, match keyboard backlight to wallpaper's best color, setting next/previous. If so, this is what you're looking for! Auto walls is a Linux wallpaper system for any window manager: flexible and customizable, written entirely in Python.**
 
-**branch with timer in c for the smallest bg memory usage**
-> [!WARNING]  
-> I have no clue about c. The following code of timer is written by chatGPT. Use with cautions
-
-### Instructions 
-
-```
-gcc -o timer timer.c
-```
-
 ## Features
 
 - Automatically sets random wallpaper every n minutes.
@@ -41,6 +31,19 @@ pip install numpy Pillow scikit-learn
 ```bash
 sudo pacman -S python-numpy python-scikit-learn python-pillow
 ```
+
+## Compiling timer
+Timer is a process that will work in background and set next wallpaper every intervall
+
+> [!WARNING]  
+> The following code of timer is written by chatGPT. Use with cautions
+
+### Instructions 
+
+```
+gcc -o timer timer.c
+```
+
 
 ## Usage
 
