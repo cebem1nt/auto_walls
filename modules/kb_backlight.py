@@ -3,7 +3,7 @@ import subprocess, time
 from PIL import Image
 from sklearn.cluster import KMeans
 
-from auto_walls import StateParser, write_to_state
+from auto_walls import State
 
 def extract_color(image_path, num_colors=1, size=20):
     img = Image.open(image_path).resize((size, size)).convert('RGB')
@@ -18,18 +18,17 @@ def rgb_to_hex(rgb):
     r, g, b = rgb
     return f"{r:02X}{g:02X}{b:02X}"
 
-def set_backlight(state_dir:str, picture: str, transition: bool, 
+def set_backlight(state: State, picture: str, transition: bool, 
                   keyboard_cli: str, keyboard_transition_cli: str,
                   transition_duration: float):
     
     color = rgb_to_hex(extract_color(picture))
 
     if transition:
-        state = StateParser(state_dir).parse_state()
         try:
-            prev_color = state["prev_color"]
+            prev_color = state.prev_kb_color
         except:
-            prev_color = '000000'
+            prev_color = '010101'
 
         keyboard_transition_cli = keyboard_transition_cli.replace("<prev>", prev_color)
         keyboard_transition_cli = keyboard_transition_cli.replace("<color>", color)
@@ -41,4 +40,4 @@ def set_backlight(state_dir:str, picture: str, transition: bool,
     subprocess.run(keyboard_cli.split())
     
     print("changed backlight color to :", color)
-    write_to_state("prev_color", color, state_dir)
+    state.write_to_state("prev_color", color)

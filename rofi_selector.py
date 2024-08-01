@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from auto_walls import StateParser, ConfigParser, set_wallpaper
+from auto_walls import State, ConfigParser, set_wallpaper
 import subprocess, os, argparse
 
 
@@ -8,13 +8,12 @@ def main(theme:str, state_dir='~/.auto_walls/state.json',
          config_dir='~/.config/auto_walls/config.json'):
 
     c = ConfigParser(config_dir).parse_config()
-    state = StateParser(state_dir).parse_state()
+    state = State(state_dir)
 
-    ws = state["wallpapers"]
     wd = os.path.expanduser(c["wallpapers_dir"])
 
     # Generate Rofi options with thumbnails
-    rofi_options = "\n".join(f"{w.split("/")[-1]}\x00icon\x1f{w}" for w in ws)
+    rofi_options = "\n".join(f"{w.split("/")[-1]}\x00icon\x1f{w}" for w in state.wallpapers)
 
     if len(theme) > 0: # checking argument
         rofi_theme = theme
@@ -35,13 +34,13 @@ def main(theme:str, state_dir='~/.auto_walls/state.json',
     # Check if a wallpaper was selected
     if selected_option:
         selected_wallpaper_dir = os.path.join(wd, selected_option.split('\x00icon\x1f')[0])  # Extract full wallpaper path
-        i = ws.index(selected_wallpaper_dir)
-        set_wallpaper(c, state_dir, selected_wallpaper_dir, i)
+        i = state.wallpapers.index(selected_wallpaper_dir)
+        set_wallpaper(c, state, selected_wallpaper_dir, i)
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(description="""
                                     Runs rofi with list of shuffled wallpapers with tumbnails. 
-                                    By default takes theme path from config file. 
+                                    By default takes theme path from the config file. 
                                     Theme can be passed as an argument, in this case it will have more priority than config's one.
                                     Additional info can be found at https://github.com/cebem1nt/auto_walls
                                 """)
