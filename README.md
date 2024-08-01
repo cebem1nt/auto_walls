@@ -23,13 +23,13 @@ A collection of scripts including a main script launched at startup, scripts to 
 ### pip
 
 ```bash
-pip install numpy Pillow scikit-learn
+pip install numpy Pillow scikit-learn psutil
 ```
 
 ### Arch Linux
 
 ```bash
-sudo pacman -S python-numpy python-scikit-learn python-pillow
+sudo pacman -S python-numpy python-scikit-learn python-pillow python-psutil
 ```
 
 ## Compiling timer
