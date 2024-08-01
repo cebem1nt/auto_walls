@@ -6,7 +6,7 @@
 - Automatically sets random wallpaper every n minutes.
 - Sets keyboard backlight color based on the wallpaper.
 - Provides scripts for setting previous and next wallpapers.
-- Supports Rofi menu with thumbnails of wallpapers.
+- Provides Rofi menu script to select wallpaper.
 
 ## About
 
