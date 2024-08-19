@@ -18,11 +18,19 @@ def rgb_to_hex(rgb):
     r, g, b = rgb
     return f"{r:02X}{g:02X}{b:02X}"
 
+
 def set_backlight(state: State, picture: str, transition: bool, 
                   keyboard_cli: str, keyboard_transition_cli: str,
                   transition_duration: float):
     
-    color = rgb_to_hex(extract_color(picture))
+    if picture in state.cache:
+        color = state.cache[picture]
+
+    else:
+        color = rgb_to_hex(extract_color(picture))
+        state.cache[picture] = color
+
+        state.write_to_state('cache', state.cache)
 
     if transition:
         try:

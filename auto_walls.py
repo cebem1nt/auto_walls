@@ -69,7 +69,8 @@ class StateParser(Parser):
                 "wallpapers": [],
                 "index"     : -2,
                 "timer_pid" : -1,
-                "prev_color": '' 
+                "prev_color": '' ,
+                "cache" : {}
             }
 
         return state
@@ -86,6 +87,7 @@ class State:
         self.prev_kb_color: str = parsed_state["prev_color"]
         self.wallpapers: list = parsed_state["wallpapers"]
         self.index: str = parsed_state["index"]
+        self.cache: dict = parsed_state["cache"]
 
     def write_to_state(self, property: str, value: any): 
         # writing any property and value to the state

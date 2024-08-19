@@ -9,7 +9,6 @@ def main(state_dir='~/.auto_walls/state.json',
     
     state = State(state_dir)
     c = ConfigParser(config_dir).parse_config()
-    print(c)
 
     wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
 
