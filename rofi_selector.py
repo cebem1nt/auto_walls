@@ -21,7 +21,7 @@ def main(theme:str, state_dir='~/.auto_walls/state.json',
         rofi_theme = c["rofi-theme"]
     
     # Launch Rofi with thumbnails and passed theme (none if empty)
-    rofi_process = subprocess.Popen(f"rofi -dmenu -i -theme {rofi_theme}".split(),
+    rofi_process = subprocess.Popen(f"rofi -dmenu -i -theme {rofi_theme} -selected-row {state.index}".split(),
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
