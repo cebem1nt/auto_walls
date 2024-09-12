@@ -76,7 +76,7 @@ class StateParser(Parser):
         return state
 
 class State:
-    def __init__(self, state_dir: str) -> None:
+    def __init__(self, state_dir='~/.local/share/auto_walls/state.json') -> None:
         self.dir = os.path.expanduser(state_dir)
         self.update_state()
 
@@ -103,6 +103,9 @@ class State:
         wallpapers_dir = os.path.expanduser(wallpapers_dir)
         wallpapers = []
 
+        if do_notify:
+            notify("Shuffling wallpapers..")
+
         for w in os.listdir(wallpapers_dir):
             if os.path.isfile(os.path.join(wallpapers_dir, w)): 
                 w = os.path.join(wallpapers_dir, w) # completed dir for each wallpaper
@@ -116,9 +119,6 @@ class State:
             raise FileNotFoundError(f'No wallpapers found in {wallpapers_dir}')
         
         random.shuffle(wallpapers)
-
-        if do_notify:
-            notify("Shuffling wallpapers..")
 
         self.write_to_state("wallpapers", wallpapers)
         self.write_to_state("index", -1)              
@@ -153,11 +153,10 @@ def set_wallpaper(config: dict, state: State, current_wallpaper: str,
         state.write_to_state("index", index)
         print(f'changed wallpaper, index : {index}')
 
-def main(config_dir = '~/.config/auto_walls/config.json',
-         state_dir = '~/.auto_walls/state.json'):
+def main(config_dir = '~/.config/auto_walls/config.json'):
     
     c = ConfigParser(config_dir).parse_config()    # getting config file
-    state = State(state_dir)
+    state = State()
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
 

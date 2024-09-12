@@ -4,10 +4,9 @@ from auto_walls import StateParser, ConfigParser, State, set_wallpaper
 import os
 
 
-def main(state_dir='~/.auto_walls/state.json', 
-         config_dir='~/.config/auto_walls/config.json'):
+def main(config_dir='~/.config/auto_walls/config.json'):
 
-    state = State(state_dir)
+    state = State()
     c = ConfigParser(config_dir).parse_config()
 
     if len(state.wallpapers) == 0 or state.index <= 0 : # there is no wallpapers or

@@ -4,12 +4,10 @@ from auto_walls import ConfigParser, set_wallpaper, State, StateParser
 from argparse import ArgumentParser
 import os
 
-def main(wallpaper_dir: str,
-         state_dir='~/.auto_walls/state.json', 
-         config_dir='~/.config/auto_walls/config.json'):
+def main(wallpaper_dir: str, config_dir='~/.config/auto_walls/config.json'):
 
     c = ConfigParser(config_dir).parse_config()
-    state = State(state_dir)
+    state = State()
 
     set_wallpaper(c, state, wallpaper_dir, state.index, do_write_to_state=False)
 
