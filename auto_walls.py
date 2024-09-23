@@ -4,7 +4,7 @@ from subprocess import run, Popen
 from psutil import pid_exists, Process
 
 def notify(message: str, lvl='normal'):
-    run(["notify-send", message, "-a", "wallpaper", "-u", lvl])
+    run(["notify-send", message, "-a", "wallpaper", "-u", lvl, "-i", "preferences-desktop-wallpaper"])
 
 class Parser: 
     # a superior class for files parsing 
@@ -27,7 +27,7 @@ class Parser:
             
 class ConfigParser(Parser):  
     # a sub class for config parsing
-    def __init__(self, file) -> None:
+    def __init__(self, file='~/.config/auto_walls/config.json') -> None:
         super().__init__(file)
 
     def parse_config(self): 
@@ -153,9 +153,8 @@ def set_wallpaper(config: dict, state: State, current_wallpaper: str,
         state.write_to_state("index", index)
         print(f'changed wallpaper, index : {index}')
 
-def main(config_dir = '~/.config/auto_walls/config.json'):
-    
-    c = ConfigParser(config_dir).parse_config()    # getting config file
+def main():
+    c = ConfigParser().parse_config()    # getting config file
     state = State()
 
     script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -164,11 +163,11 @@ def main(config_dir = '~/.config/auto_walls/config.json'):
         if state.timer_pid != -1:
             if pid_exists(state.timer_pid):
                 print(f"auto_walls daemon is already running in backgound with pid {state.timer_pid}")
-                restart = input("Restart it ? [Y/n] ")
+                restart = input("Restart it ? [y/n] ")
                 if 'y' == restart.lower():
                     Process(state.timer_pid).kill()
 
-                if 'n' == restart.lower():
+                else:
                     return
             else:
                 state.write_to_state("timer_pid", -1)

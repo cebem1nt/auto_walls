@@ -3,11 +3,9 @@
 from auto_walls import ConfigParser, State, set_wallpaper
 import os
 
-
-def main(config_dir='~/.config/auto_walls/config.json'):
-    
+if __name__ == '__main__':
     state = State()
-    c = ConfigParser(config_dir).parse_config()
+    c = ConfigParser().parse_config()
 
     wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
 
@@ -23,8 +21,5 @@ def main(config_dir='~/.config/auto_walls/config.json'):
             i = 0
 
     current_wallpaper = state.wallpapers[i]
-        
+    
     set_wallpaper(c, state, current_wallpaper, i)
-
-if __name__ == '__main__':
-    main()

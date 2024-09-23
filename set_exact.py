@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
-from auto_walls import ConfigParser, set_wallpaper, State, StateParser 
+from auto_walls import ConfigParser, set_wallpaper, State 
 from argparse import ArgumentParser
 import os
 
-def main(wallpaper_dir: str, config_dir='~/.config/auto_walls/config.json'):
+def main(wallpaper_dir: str):
 
-    c = ConfigParser(config_dir).parse_config()
+    c = ConfigParser().parse_config()
     state = State()
 
     set_wallpaper(c, state, wallpaper_dir, state.index, do_write_to_state=False)

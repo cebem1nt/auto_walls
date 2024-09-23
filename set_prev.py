@@ -1,13 +1,11 @@
 #!/usr/bin/env python3
 
-from auto_walls import StateParser, ConfigParser, State, set_wallpaper
+from auto_walls import ConfigParser, State, set_wallpaper
 import os
 
-
-def main(config_dir='~/.config/auto_walls/config.json'):
-
+if __name__ == '__main__':
     state = State()
-    c = ConfigParser(config_dir).parse_config()
+    c = ConfigParser().parse_config()
 
     if len(state.wallpapers) == 0 or state.index <= 0 : # there is no wallpapers or
                                                         # allready first wallpaper
@@ -22,6 +20,3 @@ def main(config_dir='~/.config/auto_walls/config.json'):
 
     current_wallpaper = state.wallpapers[i]
     set_wallpaper(c, state, current_wallpaper, i)
-
-if __name__ == '__main__':
-    main()
