@@ -140,18 +140,30 @@ def set_wallpaper(config: dict, state: State, current_wallpaper: str,
         state.reset_state(config["wallpapers_dir"], config["notify"])
         notify(f"Error, could not find {current_wallpaper}, try running auto_walls.py again", 'critical')
 
-    cli = wallpapers_command.replace("<picture>", current_wallpaper)
-    run(cli.split())
+    locker_file = os.path.expanduser('~/.local/share/auto_walls/auto_walls.lock')
 
-    if change_backlight: 
-    # running keyboard module to find the best collor and set it
-        from modules.kb_backlight import set_backlight
-        set_backlight(state, current_wallpaper, config["backlight_transition"],
-                      config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
+    if not os.path.exists(locker_file):
+        try:
+            open(locker_file, 'w').close()
 
-    if do_write_to_state:
-        state.write_to_state("index", index)
-        print(f'changed wallpaper, index : {index}')
+            cli = wallpapers_command.replace("<picture>", current_wallpaper)
+            
+            if do_write_to_state:
+                state.write_to_state("index", index)
+                print(f'changed wallpaper, index : {index}')
+
+            run(cli.split())
+
+            if change_backlight: 
+            # running keyboard module to find the best collor and set it
+                from modules.kb_backlight import set_backlight
+                set_backlight(state, current_wallpaper, config["backlight_transition"],
+                            config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
+            
+            os.remove(locker_file)
+            
+        except:
+            os.remove(locker_file)
 
 def main():
     c = ConfigParser().parse_config()    # getting config file
