@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
 
-from auto_walls import ConfigParser, State, set_wallpaper
+from auto_walls import get_config, State, set_wallpaper
 import os
 
 if __name__ == '__main__':
     state = State()
-    c = ConfigParser().parse_config()
+    c = get_config()
 
-    if len(state.wallpapers) == 0 or state.index <= 0 : # there is no wallpapers or
-                                                        # allready first wallpaper
-
-        wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
-        state.reset_state(wallpapers_dir, c["notify"])
+    if not state.wallpapers or (state.index <= 0): # there is no wallpapers or allready first wallpaper
+        state.reset_state(os.path.expanduser(c["wallpapers_dir"]), c["notify"])
 
         i = len(state.wallpapers) - 1 # going from the end
 

@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 
-from auto_walls import ConfigParser, State, set_wallpaper
+from auto_walls import get_config, State, set_wallpaper
 import os
 
 if __name__ == '__main__':
     state = State()
-    c = ConfigParser().parse_config()
+    c = get_config()
 
     wallpapers_dir = os.path.expanduser(c["wallpapers_dir"])
 
-    if state.index == -2: # no state, first run
+    if state.index is None: # no state, first run
         state.reset_state(wallpapers_dir, c["notify"])
         i = 0
 

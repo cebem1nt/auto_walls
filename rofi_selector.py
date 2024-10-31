@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 
-from auto_walls import State, ConfigParser, set_wallpaper
+from auto_walls import State, get_config, set_wallpaper
 import subprocess, os
 
 if __name__ == '__main__':
 
-    c = ConfigParser().parse_config()
+    c = get_config()
     state = State()
 
     wd = os.path.expanduser(c["wallpapers_dir"])
@@ -14,7 +14,9 @@ if __name__ == '__main__':
     rofi_options = "\n".join(f"{w.split("/")[-1]}\x00icon\x1f{w}" for w in state.wallpapers)
 
     # Launch Rofi with thumbnails and passed theme (none if empty)
-    rofi_process = subprocess.Popen(f"rofi -dmenu -i  {'-theme ' + c["rofi-theme"]} -selected-row {state.index}".split(),
+    rofi_theme =  "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '
+    
+    rofi_process = subprocess.Popen(["rofi", "-dmenu", "-i"] + rofi_theme.split() + ["-selected-row", str(state.index)],
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,

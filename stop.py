@@ -1,9 +1,9 @@
-from auto_walls import State, ConfigParser, notify
+from auto_walls import State, get_config, notify
 from psutil import Process, NoSuchProcess
 
 if __name__ == '__main__':
     state = State()
-    do_notify = ConfigParser().parse_config()["notify"]
+    do_notify = get_config()["notify"]
 
     try:
         if state.timer_pid == -1:
@@ -21,4 +21,4 @@ if __name__ == '__main__':
             notify(f"error: {e}")
 
     finally:
-        state.write_to_state("timer_pid", -1)
+        state.timer_pid = -1

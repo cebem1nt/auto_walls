@@ -18,27 +18,19 @@ def rgb_to_hex(rgb):
     r, g, b = rgb
     return f"{r:02X}{g:02X}{b:02X}"
 
-
-def set_backlight(state: State, picture: str, transition: bool, 
-                  keyboard_cli: str, keyboard_transition_cli: str,
-                  transition_duration: float):
+def set_backlight(state: State, picture: str, transition: bool, keyboard_cli: str, keyboard_transition_cli: str, transition_duration: float | int):
     
     if picture in state.cache:
-        color = state.cache[picture]
+        color = state.get_cache(picture)
 
     else:
         color = rgb_to_hex(extract_color(picture))
-        state.cache[picture] = color
-
-        state.write_to_state('cache', state.cache)
+        state.add_cache(picture, color)
 
     if transition:
-        try:
-            prev_color = state.prev_kb_color
-        except:
-            prev_color = '010101'
+        prev_color = state.prev_kb_color if state.prev_kb_color else '010101'
 
-        keyboard_transition_cli = keyboard_transition_cli.replace("<prev>", prev_color)
+        keyboard_transition_cli = keyboard_transition_cli.replace("<prev>", str(prev_color))
         keyboard_transition_cli = keyboard_transition_cli.replace("<color>", color)
 
         subprocess.run(keyboard_transition_cli.split())
@@ -48,4 +40,4 @@ def set_backlight(state: State, picture: str, transition: bool,
     subprocess.run(keyboard_cli.split())
     
     print("changed backlight color to :", color)
-    state.write_to_state("prev_color", color)
+    state.prev_kb_color = color
