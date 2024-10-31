@@ -141,6 +141,7 @@ class State:
         if not len(wallpapers):
             raise ValueError(f"There are no wallpapers in {user_wallpapers_dir} !")
 
+        random.shuffle(wallpapers)
         self.wallpapers = wallpapers
         self.index = -1
 

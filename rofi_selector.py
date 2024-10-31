@@ -30,4 +30,5 @@ if __name__ == '__main__':
     if selected_option:
         selected_wallpaper_dir = os.path.join(wd, selected_option.split('\x00icon\x1f')[0])  # Extract full wallpaper path
         i = state.wallpapers.index(selected_wallpaper_dir)
-        set_wallpaper(c, state, selected_wallpaper_dir, i)
+        if i != state.index:
+            set_wallpaper(c, state, selected_wallpaper_dir, i)
