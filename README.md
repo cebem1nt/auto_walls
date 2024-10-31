@@ -77,7 +77,7 @@ After the first run of `auto_walls.py`, the following config will be generated a
     "transition_duration": 1.1,
     "notify": true,
     "backlight_transition": false,
-    "rofi-theme": ""
+    "rofi_theme": ""
 }
 ```
 
