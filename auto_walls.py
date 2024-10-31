@@ -43,10 +43,10 @@ class State:
     cache_dir = os.path.expanduser('~/.cache/auto_walls')
 
     def __init__(self) -> None:
-        self.wallpapers_dir = os.path.join(self.root, 'wallpapers.json')
-        self.timer_pid_dir = os.path.join(self.root, 'pid')
-        self.index_dir = os.path.join(self.root, 'index')
-        self.prev_kb_color_dir = os.path.join(self.root, 'prev_kb')
+        self._wallpapers_dir = os.path.join(self.root, 'wallpapers.json')
+        self._timer_pid_dir = os.path.join(self.root, 'pid')
+        self._index_dir = os.path.join(self.root, 'index')
+        self._prev_kb_color_dir = os.path.join(self.root, 'prev_kb')
 
         if not os.path.exists(self.root):
             os.makedirs(self.root)
@@ -67,10 +67,10 @@ class State:
 
     @property
     def wallpapers(self):
-        if not os.path.exists(self.wallpapers_dir):
+        if not os.path.exists(self._wallpapers_dir):
             return None
 
-        with open(self.wallpapers_dir) as f:
+        with open(self._wallpapers_dir) as f:
             try:
                 return json.load(f)
             except:
@@ -78,32 +78,32 @@ class State:
 
     @wallpapers.setter
     def wallpapers(self, val: list):
-        with open(self.wallpapers_dir, 'w') as f:
+        with open(self._wallpapers_dir, 'w') as f:
             json.dump(val, f)
 
     @property
     def timer_pid(self):
-        return self._read_from_file(self.timer_pid_dir)
+        return self._read_from_file(self._timer_pid_dir)
 
     @timer_pid.setter
     def timer_pid(self, val: int):
-        self._write_to_file(self.timer_pid_dir, val)
+        self._write_to_file(self._timer_pid_dir, val)
 
     @property
     def index(self):
-        return self._read_from_file(self.index_dir)
+        return self._read_from_file(self._index_dir)
 
     @index.setter
     def index(self, val: int):
-        self._write_to_file(self.index_dir, val)
+        self._write_to_file(self._index_dir, val)
 
     @property
     def prev_kb_color(self):
-        return self._read_from_file(self.prev_kb_color_dir)
+        return self._read_from_file(self._prev_kb_color_dir)
 
     @prev_kb_color.setter
     def prev_kb_color(self, val: str):
-        self._write_to_file(self.prev_kb_color_dir, val)
+        self._write_to_file(self._prev_kb_color_dir, val)
 
     @property
     def cache(self):
@@ -154,11 +154,11 @@ def set_wallpaper(config: dict, state: State, current_wallpaper: str, index: int
 
         notify(f"Error, could not find {current_wallpaper}, try running auto_walls.py again", 'critical')
 
-    locker_file = os.path.expanduser('~/.local/share/auto_walls/auto_walls.lock')
+    lock_file = os.path.expanduser('~/.local/share/auto_walls/auto_walls.lock')
 
-    if not os.path.exists(locker_file):
+    if not os.path.exists(lock_file):
         try:
-            open(locker_file, 'w').close()
+            open(lock_file, 'w').close()
 
             cli = wallpapers_command.replace("<picture>", current_wallpaper)
             
@@ -175,7 +175,7 @@ def set_wallpaper(config: dict, state: State, current_wallpaper: str, index: int
                             config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
             
         finally:
-            os.remove(locker_file)
+            os.remove(lock_file)
 
 def main():
     c = get_config()
@@ -184,18 +184,13 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     try:
-        if state.timer_pid is not None:
-            if pid_exists(state.timer_pid):
-                print(f"auto_walls daemon is already running in backgound with pid {state.timer_pid}")
-                restart = input("Restart it ? [y/n] ")
-                if 'y' == restart.lower():
-                    Process(state.timer_pid).kill()
-                else:
-                    return
+        if state.timer_pid != -1:
+            if pid_exists(state.timer_pid) and os.path.basename(os.readlink(f'/proc/{state.timer_pid}/exe')) == 'timer':
+                return
             else:
-                state.timer_pid = None
+                state.timer_pid = -1
 
-        process = Popen([os.path.join(script_dir, 'timer'), c["intervall"]])
+        process = Popen([os.path.join(script_dir, 'timer'), str(c["intervall"])])
         state.timer_pid = process.pid
         print(f"New timer process started with pid: {process.pid}")
         
