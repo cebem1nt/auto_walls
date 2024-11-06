@@ -38,9 +38,8 @@ def get_config(file='~/.config/auto_walls/config.json'):
             return default_config
 
 class State:    
-    
     root = os.path.expanduser('~/.local/share/auto_walls')
-    cache_dir = os.path.expanduser('~/.cache/auto_walls')
+    _cache = {}
 
     def __init__(self) -> None:
         self._wallpapers_dir = os.path.join(self.root, 'wallpapers.json')
@@ -52,34 +51,42 @@ class State:
             os.makedirs(self.root)
 
     def _read_from_file(self, dir: str):
+        if dir in self._cache:
+            return self._cache[dir]
+
         if not os.path.exists(dir):
             return None
+        
         with open(dir) as f:
             content = f.read()
-            try:
-                return int(content)
-            except: return content
-
+            return int(content) if content.isdigit() else content
 
     def _write_to_file(self, dir: str, value: int | str):
         with open(dir, 'w') as f:
             f.write(str(value))
+        self._cache[dir] = value
 
     @property
-    def wallpapers(self):
+    def wallpapers(self) -> list[str]:
+        if "wallpapers" in self._cache:
+            return self._cache["wallpapers"]
+
         if not os.path.exists(self._wallpapers_dir):
             return None
 
         with open(self._wallpapers_dir) as f:
             try:
-                return json.load(f)
-            except:
+                wallpapers = json.load(f)
+                self._cache["wallpapers"] = wallpapers
+                return wallpapers
+            except json.JSONDecodeError:
                 return None
 
     @wallpapers.setter
-    def wallpapers(self, val: list):
+    def wallpapers(self, val: list[str]) -> None:
         with open(self._wallpapers_dir, 'w') as f:
             json.dump(val, f)
+        self._cache["wallpapers"] = val 
 
     @property
     def timer_pid(self):
@@ -104,24 +111,6 @@ class State:
     @prev_kb_color.setter
     def prev_kb_color(self, val: str):
         self._write_to_file(self._prev_kb_color_dir, val)
-
-    @property
-    def cache(self):
-        if not os.path.exists(self.cache_dir):
-            os.makedirs(self.cache_dir)
-        return os.listdir(self.cache_dir)
-
-    def add_cache(self, name: str, value: str):
-        name = name.replace('/', '|')
-
-        with open(os.path.join(self.cache_dir, name), 'w') as f:
-            f.write(value)
-
-    def get_cache(self, name: str):
-        name = name.replace('/', '|')
-
-        with open(os.path.join(self.cache_dir, name)) as f:
-            return f.read()
 
     def reset_state(self, user_wallpapers_dir: str, do_notify=False):
         user_wallpapers_dir = os.path.expanduser(user_wallpapers_dir)
