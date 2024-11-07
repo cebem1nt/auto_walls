@@ -40,6 +40,7 @@ def set_backlight(state: State, picture: str, transition: bool, keyboard_cli: st
     color = _in_cache(picture, cache_dir)
 
     if color is None:
+        print('calculating...')
         color = rgb_to_hex(extract_color(picture))
         _to_cache(picture, color, cache_dir)
 

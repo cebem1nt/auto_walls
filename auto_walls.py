@@ -4,13 +4,13 @@ from subprocess import run, Popen
 from psutil import pid_exists, Process
 
 def notify(message: str, lvl='normal'):
-    run(["notify-send", message, "-a", "wallpaper", "-u", lvl, "-i", "preferences-desktop-wallpaper"])
+    Popen(["notify-send", message, "-a", "wallpaper", "-u", lvl, "-i", "preferences-desktop-wallpaper"])
 
 def get_config(file='~/.config/auto_walls/config.json'): 
     file = os.path.expanduser(file)
 
     default_config = {  
-            "intervall"               : 30,
+            "interval"               : 30,
             "wallpapers_dir"          : "~/Pictures",
             "wallpapers_cli"          : "swww img <picture>",
             "keyboard_cli"            : "rogauracore single_static <color>",
@@ -43,7 +43,7 @@ class State:
 
     def __init__(self) -> None:
         self._wallpapers_dir = os.path.join(self.root, 'wallpapers.json')
-        self._timer_pid_dir = os.path.join(self.root, 'pid')
+        self._timer_pid_dir = os.path.join(self.root, 'pid.lock')
         self._index_dir = os.path.join(self.root, 'index')
         self._prev_kb_color_dir = os.path.join(self.root, 'prev_kb')
 
@@ -59,7 +59,13 @@ class State:
         
         with open(dir) as f:
             content = f.read()
-            return int(content) if content.isdigit() else content
+            try: # Python's isdigit() doesnt fire on -1
+                value = int(content)
+            except:
+                value = content
+
+        self._cache[dir] = value
+        return value
 
     def _write_to_file(self, dir: str, value: int | str):
         with open(dir, 'w') as f:
@@ -173,18 +179,20 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))
 
     try:
-        if state.timer_pid != -1:
-            if pid_exists(state.timer_pid) and os.path.basename(os.readlink(f'/proc/{state.timer_pid}/exe')) == 'timer':
-                return
-            else:
-                state.timer_pid = -1
+        if state.timer_pid == -1:
+            # It was turned off on purpose, so do nothing
+            return
 
-        process = Popen([os.path.join(script_dir, 'timer'), str(c["intervall"])])
+        if (state.timer_pid and state.timer_pid != -1) and pid_exists(state.timer_pid) \
+            and os.path.basename(os.readlink(f'/proc/{state.timer_pid}/exe')) == 'timer':
+            return
+
+        process = Popen([os.path.join(script_dir, 'timer'), str(c["interval"])])
         state.timer_pid = process.pid
         print(f"New timer process started with pid: {process.pid}")
         
     except Exception as e:
-        print(f"Error while running: {e}")
+        raise e
 
 if __name__ == '__main__':
     main()
