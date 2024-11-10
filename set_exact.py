@@ -6,7 +6,7 @@ import os
 
 def main(wallpaper_dir: str):
 
-    set_wallpaper(get_config(), State(), wallpaper_dir, state.index, do_write_to_state=False)
+    set_wallpaper(get_config(), State(), wallpaper_dir, -1, do_change_index=False)
 
 if __name__ == '__main__':
     p = ArgumentParser(description='Set exact wallpaper')
