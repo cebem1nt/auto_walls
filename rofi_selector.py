@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from auto_walls import State, get_config, set_wallpaper
+from auto_walls import State, get_config, set_wallpaper, expand_path
 import subprocess, os
 
 if __name__ == '__main__':
@@ -8,7 +8,7 @@ if __name__ == '__main__':
     c = get_config()
     state = State()
 
-    wd = os.path.expanduser(c["wallpapers_dir"])
+    wd = expand_path(c["wallpapers_dir"])
 
     # Generate Rofi options with thumbnails
     rofi_options = "\n".join(f"{w.split("/")[-1]}\x00icon\x1f{w}" for w in state.wallpapers)

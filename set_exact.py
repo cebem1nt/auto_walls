@@ -2,7 +2,6 @@
 
 from auto_walls import get_config, set_wallpaper, State 
 from argparse import ArgumentParser
-import os
 
 def main(wallpaper_dir: str):
 
@@ -16,4 +15,4 @@ if __name__ == '__main__':
     
     args = p.parse_args()
     
-    main(os.path.expanduser(args.wallpaper))
+    main(args.wallpaper)

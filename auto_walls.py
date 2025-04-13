@@ -6,6 +6,9 @@ from psutil import pid_exists, Process
 def notify(message: str, lvl='normal'):
     Popen(["notify-send", message, "-a", "wallpaper", "-u", lvl, "-i", "preferences-desktop-wallpaper"])
 
+def expand_path(path: str):
+    return os.path.expandvars(os.path.expanduser(path))
+
 def get_config(file='~/.config/auto_walls/config.json'): 
     file = os.path.expanduser(file)
 
@@ -119,7 +122,7 @@ class State:
         self._write_to_file(self._prev_kb_color_dir, val)
 
     def reset_state(self, user_wallpapers_dir: str, do_notify=False):
-        user_wallpapers_dir = os.path.expanduser(user_wallpapers_dir)
+        user_wallpapers_dir = expand_path(user_wallpapers_dir)
         wallpapers = []
 
         if not os.path.exists(user_wallpapers_dir):
@@ -140,14 +143,15 @@ class State:
         self.wallpapers = wallpapers
         self.index = -1
 
-def set_wallpaper(config: dict, state: State, current_wallpaper: str, index: int, do_change_index=True):  
+def set_wallpaper(config: dict, state: State, wallpaper: str, index: int, do_change_index=True):  
     wallpapers_command = config["wallpapers_cli"] 
+    wallpaper = expand_path(wallpaper)
 
-    if not os.path.exists(current_wallpaper):
+    if not os.path.exists(wallpaper):
         # wallpaper that we try to set was renamed or deleted
         state.reset_state(config["wallpapers_dir"], config["notify"])
 
-        notify(f"Error, could not find {current_wallpaper}, try running auto_walls.py again", 'critical')
+        notify(f"Error, could not find {wallpaper}, try running auto_walls.py again", 'critical')
 
     lock_file = os.path.expanduser('~/.local/share/auto_walls/auto_walls.lock')
 
@@ -155,7 +159,7 @@ def set_wallpaper(config: dict, state: State, current_wallpaper: str, index: int
         try:
             open(lock_file, 'w').close()
 
-            cli = wallpapers_command.replace("<picture>", current_wallpaper)
+            cli = wallpapers_command.replace("<picture>", wallpaper)
             
             if do_change_index:
                 state.index = index
@@ -166,7 +170,7 @@ def set_wallpaper(config: dict, state: State, current_wallpaper: str, index: int
             if config["change_backlight"]: 
             # running keyboard module to find the best collor and set it
                 from modules.kb_backlight import set_backlight
-                set_backlight(state, current_wallpaper, config["backlight_transition"],
+                set_backlight(state, wallpaper, config["backlight_transition"],
                             config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
             
         finally:
