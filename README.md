@@ -10,13 +10,14 @@
 
 ## About
 
-A collection of scripts including a main script launched at startup, scripts to set previous and next wallpapers, a script to run a Rofi menu with wallpaper options, and a keyboard module. If `change_backlight` in the config is set to true, the backlight changes based on the dominant color from the wallpaper image. Initially designed for `swww` and `rogauracore` (ASUS ROG laptops) due to their CLI interfaces for changing wallpaper and keyboard backlight color, but adaptable to any other CLI tools for similar tasks.
+A collection of scripts including a main script launched at startup, scripts to set previous and next wallpapers, a script to run a Rofi menu with wallpaper options, and adaptive keyboard backlight module. If `change_backlight` in the config is set to true, the backlight changes based on the dominant color from the wallpaper image. Initially used with `swww` and `rogauracore` (ASUS ROG laptops) to changie wallpaper and keyboard backlight color, but can be configured to use with any other cli tool
 
 ## Default Requirements
 
 - [swww](https://github.com/LGFae/swww): Wayland wallpapers tool.
 - [rogauracore](https://github.com/wroberts/rogauracore): CLI tool for changing keyboard color on ASUS ROG laptops.
 - [rofi](https://github.com/davatorium/rofi): Required for the wallpapers menu.
+- [ffmpeg](https://github.com/FFmpeg/FFmpeg): For thumbnails generation
 
 ## Python Libraries
 
@@ -31,19 +32,6 @@ pip install numpy Pillow scikit-learn
 ```bash
 sudo pacman -S python-numpy python-scikit-learn python-pillow
 ```
-
-## Compiling timer
-Timer is a process that will work in background and set next wallpaper every intervall
-
-> [!WARNING]  
-> The following code of timer is written by chatGPT. Use with cautions
-
-### Instructions 
-
-```
-gcc -o timer timer.c
-```
-
 
 ## Usage
 
@@ -91,3 +79,6 @@ After the first run of `auto_walls.py`, the following config will be generated a
 - **"notify"**: Enable/disable notifications.
 - **"backlight_transition"**: Enable/disable backlight transition effects.
 - **"rofi-theme"**: Path to a custom Rofi theme when using `rofi_selector.py`; leave empty for default theme..
+
+## TODO
+This code is so ugly and complicated. Rework someday

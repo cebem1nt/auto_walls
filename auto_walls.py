@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-import os, json, random
+import os, json, random, sys
 from subprocess import run, Popen
 from psutil import pid_exists, Process
 
 def notify(message: str, lvl='normal'):
-    Popen(["notify-send", message, "-a", "wallpaper", "-u", lvl, "-i", "preferences-desktop-wallpaper"])
+    Popen(["notify-send", message, "auto_walls", "-a", "wallpaper", "-u", lvl, "-i", "preferences-desktop-wallpaper"])
 
 def expand_path(path: str):
     return os.path.expandvars(os.path.expanduser(path))
@@ -155,26 +155,35 @@ def set_wallpaper(config: dict, state: State, wallpaper: str, index: int, do_cha
 
     lock_file = os.path.expanduser('~/.local/share/auto_walls/auto_walls.lock')
 
-    if not os.path.exists(lock_file):
-        try:
-            open(lock_file, 'w').close()
+    if os.path.exists(lock_file):
+        with open(lock_file) as f:
+            pid = int(f.read())
 
-            cli = wallpapers_command.replace("<picture>", wallpaper)
-            
-            if do_change_index:
-                state.index = index
-                print(f'changed wallpaper, index : {index}')
-
-            run(cli.split())
-
-            if config["change_backlight"]: 
-            # running keyboard module to find the best collor and set it
-                from modules.kb_backlight import set_backlight
-                set_backlight(state, wallpaper, config["backlight_transition"],
-                            config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
-            
-        finally:
+        if pid_exists(pid):
+            sys.exit(0)
+        else:
             os.remove(lock_file)
+
+    try:
+        with open(lock_file, 'w') as f:
+            f.write(str(os.getpid()))
+
+        cli = wallpapers_command.replace("<picture>", wallpaper)
+        
+        if do_change_index:
+            state.index = index
+            print(f'changed wallpaper, index : {index}')
+
+        run(cli.split())
+
+        if config["change_backlight"]: 
+        # running keyboard module to find the best collor and set it
+            from modules.kb_backlight import set_backlight
+            set_backlight(state, wallpaper, config["backlight_transition"],
+                        config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
+
+    finally:
+        os.remove(lock_file)
 
 def main():
     c = get_config()
@@ -188,7 +197,7 @@ def main():
             return
 
         if (state.timer_pid and state.timer_pid != -1) and pid_exists(state.timer_pid) \
-            and os.path.basename(os.readlink(f'/proc/{state.timer_pid}/exe')) == 'timer':
+            and os.readlink(f'/proc/{state.timer_pid}/cwd') == os.path.dirname(os.path.abspath(__file__)):
             return
 
         process = Popen([os.path.join(script_dir, 'timer'), str(c["interval"])])

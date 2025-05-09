@@ -36,7 +36,7 @@ def _to_cache(key: str, val: str, cache_dir: str):
         f.write(val)
 
 def set_backlight(state: State, picture: str, transition: bool, keyboard_cli: str, keyboard_transition_cli: str, transition_duration: float | int):
-    cache_dir = os.path.expanduser('~/.cache/auto_walls')
+    cache_dir = os.path.expanduser('~/.cache/auto_walls/kb_colors')
     color = _in_cache(picture, cache_dir)
 
     if color is None:

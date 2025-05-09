@@ -3,6 +3,25 @@
 from auto_walls import State, get_config, set_wallpaper, expand_path
 import subprocess, os
 
+def get_wallpaper_thumbnail(wallpaper_file: str, wallpaper_name: str):
+    cache_dir = os.path.expanduser('~/.cache/auto_walls/thumbnails')
+    wallpaper_thumbnail = os.path.join(cache_dir, wallpaper_name)
+
+    os.makedirs(cache_dir, exist_ok=True)
+
+    if os.path.exists(wallpaper_thumbnail):
+        return wallpaper_thumbnail
+
+    else:
+        subprocess.run([
+                    "ffmpeg", 
+                    "-i", wallpaper_file, 
+                    "-vf", f"scale='if(gt(iw,ih),{100},-1)':'if(gt(iw,ih),-1,{100})'", 
+                    "-frames:v", "1", 
+                    wallpaper_thumbnail
+                ])
+        return wallpaper_thumbnail
+
 if __name__ == '__main__':
 
     c = get_config()
@@ -11,7 +30,13 @@ if __name__ == '__main__':
     wd = expand_path(c["wallpapers_dir"])
 
     # Generate Rofi options with thumbnails
-    rofi_options = "\n".join(f"{w.split("/")[-1]}\x00icon\x1f{w}" for w in state.wallpapers)
+    rofi_options = ""
+
+    for wallpaper_file in state.wallpapers:
+        wallpaper_name = wallpaper_file.split("/")[-1]
+        wallpaper_thumbnail = get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
+
+        rofi_options += f"\n{wallpaper_name}\x00icon\x1f{wallpaper_thumbnail}"
 
     # Launch Rofi with thumbnails and passed theme (none if empty)
     rofi_theme =  "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '
