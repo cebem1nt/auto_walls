@@ -3,7 +3,7 @@
 from auto_walls import State, get_config, set_wallpaper, expand_path
 import subprocess, os
 
-def get_wallpaper_thumbnail(wallpaper_file: str, wallpaper_name: str):
+def get_wallpaper_thumbnail(wallpaper_file: str, wallpaper_name: str, max_size=500, quality=5):
     cache_dir = os.path.expanduser('~/.cache/auto_walls/thumbnails')
     wallpaper_thumbnail = os.path.join(cache_dir, wallpaper_name)
 
@@ -16,8 +16,9 @@ def get_wallpaper_thumbnail(wallpaper_file: str, wallpaper_name: str):
         subprocess.run([
                     "ffmpeg", 
                     "-i", wallpaper_file, 
-                    "-vf", f"scale='if(gt(iw,ih),{100},-1)':'if(gt(iw,ih),-1,{100})'", 
+                    "-vf", f"scale='if(gt(iw,ih),{max_size},-1)':'if(gt(iw,ih),-1,{max_size})'", 
                     "-frames:v", "1", 
+                    "-q:v", str(quality), 
                     wallpaper_thumbnail
                 ])
         return wallpaper_thumbnail
@@ -36,7 +37,7 @@ if __name__ == '__main__':
         wallpaper_name = wallpaper_file.split("/")[-1]
         wallpaper_thumbnail = get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
 
-        rofi_options += f"\n{wallpaper_name}\x00icon\x1f{wallpaper_thumbnail}"
+        rofi_options += f"{wallpaper_name}\x00icon\x1f{wallpaper_thumbnail}\n"
 
     # Launch Rofi with thumbnails and passed theme (none if empty)
     rofi_theme =  "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '

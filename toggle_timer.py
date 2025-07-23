@@ -13,20 +13,28 @@ def start_timer(interval: str, do_notify: bool):
         notify(f"Starting timer process with pid: {process.pid}")
 
 def stop_timer(do_notify: bool, pid: int):
-    Process(pid).kill()
-    state.timer_pid = -1
+    try:
+        parent = Process(pid)
 
-    if do_notify:
-        notify("Ending timer process ..")
+        for child in parent.children(recursive=True):
+            child.kill()
+        
+        parent.kill()
+        state.timer_pid = -1
+
+        if do_notify:
+            notify("Ending timer process and its children ..")
+            
+    except Exception as e:
+        if do_notify:
+            notify(f"Error stopping timer process: {str(e)}")
 
 if __name__ == '__main__':
     state = State()
     c = get_config()
 
     try:
-        if (state.timer_pid and state.timer_pid != -1) and pid_exists(state.timer_pid) \
-            and os.readlink(f'/proc/{state.timer_pid}/cwd') == os.path.dirname(os.path.abspath(__file__)):
-
+        if state.timer_pid and pid_exists(state.timer_pid):
             stop_timer(c["notify"], state.timer_pid)
         else:
             start_timer(c["interval"], c["notify"])
