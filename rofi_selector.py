@@ -42,7 +42,7 @@ if __name__ == '__main__':
     # Launch Rofi with thumbnails and passed theme (none if empty)
     rofi_theme =  "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '
     
-    rofi_process = subprocess.Popen(["rofi", "-dmenu", "-i"] + rofi_theme.split() + ["-selected-row", str(state.index)],
+    rofi_process = subprocess.Popen(["rofi", "-sync", "-dmenu", "-i"] + rofi_theme.split() + ["-selected-row", str(state.index)],
                                     stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE,
                                     stderr=subprocess.PIPE,
