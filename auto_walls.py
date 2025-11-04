@@ -168,13 +168,17 @@ def set_wallpaper(config: dict, state: State, wallpaper: str, index: int, do_cha
         with open(lock_file, 'w') as f:
             f.write(str(os.getpid()))
 
-        cli = wallpapers_command.replace("<picture>", wallpaper)
+        cli: list[str] = wallpapers_command.split()
         
+        for i, cli_part in enumerate(cli):
+            if cli_part == "<picture>":
+                cli[i] = wallpaper
+
         if do_change_index:
             state.index = index
             print(f'changed wallpaper, index : {index}')
 
-        run(cli.split())
+        run(cli)
 
         if config["change_backlight"]: 
         # running keyboard module to find the best collor and set it
