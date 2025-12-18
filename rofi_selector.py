@@ -33,6 +33,9 @@ if __name__ == '__main__':
     # Generate Rofi options with thumbnails
     rofi_options = ""
 
+    if sum(1 for entry in os.scandir(wd) if entry.is_file()) != len(state.wallpapers):
+        state.reset_state(wd, c["notify"]) 
+
     for wallpaper_file in state.wallpapers:
         wallpaper_name = wallpaper_file.split("/")[-1]
         wallpaper_thumbnail = get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
