@@ -29,30 +29,30 @@ if __name__ == '__main__':
     state = State()
 
     wd = expand_path(c["wallpapers_dir"])
-
-    # Generate Rofi options with thumbnails
-    rofi_options = ""
+    rofi_theme =  "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '
 
     if sum(1 for entry in os.scandir(wd) if entry.is_file()) != len(state.wallpapers):
         state.reset_state(wd, c["notify"]) 
+    
+    rofi_process = subprocess.Popen(
+        ["rofi", "-dmenu", "-i"] + rofi_theme.split() + ["-selected-row", str(state.index)],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
 
     for wallpaper_file in state.wallpapers:
         wallpaper_name = wallpaper_file.split("/")[-1]
         wallpaper_thumbnail = get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
 
-        rofi_options += f"{wallpaper_name}\x00icon\x1f{wallpaper_thumbnail}\n"
+        opt = f"{wallpaper_name}\x00icon\x1f{wallpaper_thumbnail}\n"
 
-    # Launch Rofi with thumbnails and passed theme (none if empty)
-    rofi_theme =  "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '
-    
-    rofi_process = subprocess.Popen(["rofi", "-sync", "-dmenu", "-i"] + rofi_theme.split() + ["-selected-row", str(state.index)],
-                                    stdin=subprocess.PIPE,
-                                    stdout=subprocess.PIPE,
-                                    stderr=subprocess.PIPE,
-                                    text=True)
+        rofi_process.stdin.write(opt)
 
     # Pass wallpapers with thumbnails to Rofi
-    selected_option, _ = rofi_process.communicate(input=rofi_options)
+    rofi_process.stdin.close() 
+    selected_option, _ = rofi_process.communicate()
     selected_option = selected_option.strip()
 
     # Check if a wallpaper was selected
