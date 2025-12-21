@@ -31,6 +31,9 @@ if __name__ == '__main__':
     wd = expand_path(c["wallpapers_dir"])
     rofi_theme =  "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '
 
+    if state.wallpapers is None:
+        state.reset_state(wd, c["notify"])
+
     if sum(1 for entry in os.scandir(wd) if entry.is_file()) != len(state.wallpapers):
         state.reset_state(wd, c["notify"]) 
     
