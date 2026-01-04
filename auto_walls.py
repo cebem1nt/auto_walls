@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+
 import os, json, random, sys
 from subprocess import run, Popen
 from psutil import pid_exists, Process
@@ -193,7 +194,7 @@ def main():
     c = get_config()
     state = State()
 
-    script_dir = os.path.dirname(os.path.abspath(__file__))
+    script_dir = os.path.dirname(os.path.realpath(__file__))
 
     try:
         if state.timer_pid == -1:
@@ -201,7 +202,7 @@ def main():
             return
 
         if (state.timer_pid and state.timer_pid != -1) and pid_exists(state.timer_pid) \
-            and os.readlink(f'/proc/{state.timer_pid}/cwd') == os.path.dirname(os.path.abspath(__file__)):
+            and os.readlink(f'/proc/{state.timer_pid}/cwd') == script_dir:
             return
 
         process = Popen([os.path.join(script_dir, 'timer'), str(c["interval"])])
