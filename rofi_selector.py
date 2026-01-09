@@ -1,9 +1,19 @@
 #!/usr/bin/env python3
 
-from auto_walls import State, get_config, set_wallpaper, expand_path
-import subprocess, os
+import subprocess, os, signal, sys
+from auto_walls import (
+    State, 
+    get_config, 
+    set_wallpaper, 
+    expand_path
+)
 
-def get_wallpaper_thumbnail(wallpaper_file: str, wallpaper_name: str, max_size=500, quality=5):
+def get_wallpaper_thumbnail(
+    wallpaper_file: str, 
+    wallpaper_name: str, 
+    max_size=500, 
+    quality=5
+):
     cache_dir = os.path.expanduser('~/.cache/auto_walls/thumbnails')
     wallpaper_thumbnail = os.path.join(cache_dir, wallpaper_name)
 
@@ -14,22 +24,33 @@ def get_wallpaper_thumbnail(wallpaper_file: str, wallpaper_name: str, max_size=5
 
     else:
         subprocess.run([
-                    "ffmpeg", 
-                    "-i", wallpaper_file, 
-                    "-vf", f"scale='if(gt(iw,ih),{max_size},-1)':'if(gt(iw,ih),-1,{max_size})'", 
-                    "-frames:v", "1", 
-                    "-q:v", str(quality), 
-                    wallpaper_thumbnail
-                ])
+            "ffmpeg", 
+            "-i", wallpaper_file, 
+            "-vf", f"scale='if(gt(iw,ih),{max_size},-1)':'if(gt(iw,ih),-1,{max_size})'", 
+            "-frames:v", "1", 
+            "-q:v", str(quality), 
+            wallpaper_thumbnail
+        ])
+
         return wallpaper_thumbnail
+
+def generate_all_thumbnails(state: State):
+    for wallpaper_file in state.wallpapers:
+        wallpaper_name = wallpaper_file.split("/")[-1]
+        get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
+
 
 if __name__ == '__main__':
 
     c = get_config()
     state = State()
 
+    if sys.argv[-1] == "--gen-thumbnails":
+        generate_all_thumbnails(state)
+        sys.exit(0)
+
     wd = expand_path(c["wallpapers_dir"])
-    rofi_theme =  "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '
+    rofi_theme = "-theme " + c["rofi_theme"] if c["rofi_theme"] else ' '
 
     if state.wallpapers is None:
         state.reset_state(wd, c["notify"])
@@ -45,6 +66,11 @@ if __name__ == '__main__':
         text=True
     )
 
+    prev = signal.getsignal(signal.SIGTERM)
+
+    # Ignore sigterm in this section
+    signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
     for wallpaper_file in state.wallpapers:
         wallpaper_name = wallpaper_file.split("/")[-1]
         wallpaper_thumbnail = get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
@@ -52,6 +78,8 @@ if __name__ == '__main__':
         opt = f"{wallpaper_name}\x00icon\x1f{wallpaper_thumbnail}\n"
 
         rofi_process.stdin.write(opt)
+
+    signal.signal(signal.SIGTERM, prev)
 
     # Pass wallpapers with thumbnails to Rofi
     rofi_process.stdin.close() 
@@ -62,5 +90,6 @@ if __name__ == '__main__':
     if selected_option:
         selected_wallpaper_dir = os.path.join(wd, selected_option.split('\x00icon\x1f')[0])  # Extract full wallpaper path
         i = state.wallpapers.index(selected_wallpaper_dir)
+
         if i != state.index:
             set_wallpaper(c, state, selected_wallpaper_dir, i)
