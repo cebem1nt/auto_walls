@@ -1,24 +1,15 @@
 #!/usr/bin/env python3
 
-from auto_walls import get_config, State, set_wallpaper
+from auto_walls import AutoWalls
 
 if __name__ == '__main__':
-    state = State()
-    c = get_config()
+    aw = AutoWalls()
+    do_notify = aw.config["notify"]
 
-    wallpapers_dir = c["wallpapers_dir"]
+    i = aw.index + 1
 
-    if state.index is None: # no state, first run
-        state.reset_state(wallpapers_dir, c["notify"])
+    if i >= len(aw.wallpapers):
+        aw.reset_state()
         i = 0
 
-    else: #there are wallpapers 
-        i = state.index + 1
-
-        if i >= len(state.wallpapers):
-            state.reset_state(wallpapers_dir, c["notify"])
-            i = 0
-
-    wallpaper = state.wallpapers[i]
-    
-    set_wallpaper(c, state, wallpaper, i)
+    aw.set_wallpaper(aw.wallpapers[i], i)

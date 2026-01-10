@@ -3,7 +3,7 @@ import subprocess, time, os
 from PIL import Image
 from sklearn.cluster import KMeans
 
-from auto_walls import State
+from auto_walls import AutoWalls
 
 def extract_color(image_path, num_colors=1, size=20):
     img = Image.open(image_path).resize((size, size)).convert('RGB')
@@ -35,17 +35,17 @@ def _to_cache(key: str, val: str, cache_dir: str):
     with open(os.path.join(cache_dir, cache_key), 'w') as f:
         f.write(val)
 
-def set_backlight(state: State, picture: str, transition: bool, keyboard_cli: str, keyboard_transition_cli: str, transition_duration: float | int):
+def set_backlight(aw: AutoWalls, picture: str, transition: bool, keyboard_cli: str, keyboard_transition_cli: str, transition_duration: float | int):
     cache_dir = os.path.expanduser('~/.cache/auto_walls/kb_colors')
     color = _in_cache(picture, cache_dir)
 
     if color is None:
-        print('calculating...')
+        print('Calculating...')
         color = rgb_to_hex(extract_color(picture))
         _to_cache(picture, color, cache_dir)
 
     if transition:
-        prev_color = state.prev_kb_color if state.prev_kb_color else '010101'
+        prev_color = aw.prev_kb_color if aw.prev_kb_color else '010101'
 
         keyboard_transition_cli = keyboard_transition_cli.replace("<prev>", str(prev_color))
         keyboard_transition_cli = keyboard_transition_cli.replace("<color>", color)
@@ -57,4 +57,4 @@ def set_backlight(state: State, picture: str, transition: bool, keyboard_cli: st
     subprocess.run(keyboard_cli.split())
     
     print("changed backlight color to :", color)
-    state.prev_kb_color = color
+    aw.prev_kb_color = color

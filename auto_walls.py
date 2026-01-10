@@ -75,17 +75,14 @@ class State:
         if "wallpapers" in self.cache:
             return self.cache["wallpapers"]
 
-        if not os.path.exists(self._wallpapers_dir):
-            return None
-
-        with open(self._wallpapers_dir) as f:
-            try:
+        try:
+            with open(self._wallpapers_dir) as f:
                 wallpapers = json.load(f)
                 self.cache["wallpapers"] = wallpapers
                 return wallpapers
 
-            except json.JSONDecodeError:
-                return None
+        except Exception:
+            return None
 
     @wallpapers.setter
     def wallpapers(self, val: list[str]) -> None:
@@ -117,7 +114,7 @@ class State:
     def prev_kb_color(self, val: str):
         self.write(self._prev_kb_color_dir, val)
 
-    def reset_state(self, user_wallpapers_dir: str, do_notify=False):
+    def _reset_state(self, user_wallpapers_dir: str, do_notify=False):
         user_wallpapers_dir = expand_path(user_wallpapers_dir)
         wallpapers = []
 
@@ -139,68 +136,91 @@ class State:
         self.wallpapers = wallpapers
         self.index = -1
 
-def set_wallpaper(config: dict, state: State, wallpaper: str, index: int, do_change_index=True):  
-    wallpapers_command = config["wallpapers_cli"] 
-    wallpaper = expand_path(wallpaper)
+class AutoWalls(State):
+    script_dir = os.path.dirname(os.path.realpath(__file__))
+    
+    def __init__(self):
+        super().__init__()
+        self.config = get_config()
+        self.wallpapers_dir = expand_path(self.config["wallpapers_dir"])
+        
+        if not self.wallpapers:
+            self.reset_state()
 
-    if not os.path.exists(wallpaper):
-        # wallpaper that we try to set was renamed or deleted
-        state.reset_state(config["wallpapers_dir"], config["notify"])
+    def set_wallpaper(self, wallpaper: str, index: int, do_change_index=True):  
+        wallpapers_command = self.config["wallpapers_cli"] 
+        wallpaper = expand_path(wallpaper)
 
-        notify(f"Error, could not find {wallpaper}, try running auto_walls.py again", 'critical')
+        if not os.path.exists(wallpaper):
+            self.reset_state()
 
-    lock_file = os.path.expanduser('~/.local/share/auto_walls/auto_walls.lock')
+        lock_file = os.path.expanduser('~/.local/share/auto_walls/auto_walls.lock')
 
-    if os.path.exists(lock_file):
-        with open(lock_file) as f:
-            pid = int(f.read())
+        if os.path.exists(lock_file):
+            with open(lock_file) as f:
+                pid = int(f.read())
 
-        if pid_exists(pid):
-            sys.exit(0)
-        else:
+            if pid_exists(pid):
+                sys.exit(0)
+            else:
+                os.remove(lock_file)
+
+        try:
+            with open(lock_file, 'w') as f:
+                f.write(str(os.getpid()))
+
+            cli: list[str] = wallpapers_command.split()
+            
+            for i, cli_part in enumerate(cli):
+                if cli_part == "<picture>":
+                    cli[i] = wallpaper
+
+            if do_change_index:
+                self.index = index
+                print(f'changed wallpaper, index : {index}')
+
+            run(cli)
+
+            if self.config["change_backlight"]: 
+                from modules.kb_backlight import set_backlight
+
+                set_backlight(self, wallpaper, 
+                    self.config["backlight_transition"], self.config["keyboard_cli"], self.config["keyboard_transition_cli"], self.config["transition_duration"])
+
+        finally:
             os.remove(lock_file)
 
-    try:
-        with open(lock_file, 'w') as f:
-            f.write(str(os.getpid()))
+    def is_timer_running(self):
+        if not self.timer_pid or self.timer_pid == -1:
+            return False 
 
-        cli: list[str] = wallpapers_command.split()
-        
-        for i, cli_part in enumerate(cli):
-            if cli_part == "<picture>":
-                cli[i] = wallpaper
+        if pid_exists(self.timer_pid):
+            with open(f"/proc/{self.timer_pid}/cmdline") as f:
+                content = f.read()
 
-        if do_change_index:
-            state.index = index
-            print(f'changed wallpaper, index : {index}')
+                if "auto_walls" in content or "timer" in content:
+                    return True 
 
-        run(cli)
+        return False
 
-        if config["change_backlight"]: 
-        # running keyboard module to find the best collor and set it
-            from modules.kb_backlight import set_backlight
-            set_backlight(state, wallpaper, config["backlight_transition"],
-                        config["keyboard_cli"], config["keyboard_transition_cli"], config["transition_duration"])
+    def has_new_wallpapers(self):
+        return sum(1 for entry in os.scandir(self.wallpapers_dir) if entry.is_file()) != len(self.wallpapers)
 
-    finally:
-        os.remove(lock_file)
+    def reset_state(self):
+        self._reset_state(self.wallpapers_dir, self.config["notify"])
 
 def main():
-    c = get_config()
-    state = State()
-
-    script_dir = os.path.dirname(os.path.realpath(__file__))
+    aw = AutoWalls()
 
     try:
-        if state.timer_pid == -1:
-            return print("Timer is turned off")
+        if aw.timer_pid == -1:
+            return print("Timer was turned off on purpose")
 
-        if (state.timer_pid and state.timer_pid != -1) and pid_exists(state.timer_pid) \
-            and os.readlink(f'/proc/{state.timer_pid}/cwd') == script_dir:
+        if aw.is_timer_running():
             return print("Timer is allready running")
 
-        process = Popen([os.path.join(script_dir, 'timer'), str(c["interval"])])
-        state.timer_pid = process.pid
+        process = Popen([os.path.join(aw.script_dir, 'timer'), str(aw.config["interval"])])
+        aw.timer_pid = process.pid
         print(f"New timer process started with pid: {process.pid}")
         
     except Exception as e:

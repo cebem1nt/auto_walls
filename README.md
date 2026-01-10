@@ -79,6 +79,3 @@ After the first run of `auto_walls.py`, the following config will be generated a
 - **"notify"**: Enable/disable notifications.
 - **"backlight_transition"**: Enable/disable backlight transition effects.
 - **"rofi-theme"**: Path to a custom Rofi theme when using `rofi_selector.py`; leave empty for default theme..
-
-## TODO
-This code is so ugly and complicated. Rework someday

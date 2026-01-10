@@ -1,28 +1,27 @@
-from auto_walls import State, get_config, notify
+from auto_walls import AutoWalls, notify
 from psutil import Process, pid_exists
 from subprocess import Popen
 
 import os
 
-def start_timer(interval: str, do_notify: bool):
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    process = Popen([f"{script_dir}/timer", str(interval)])
-    state.timer_pid = process.pid
+def start_timer(aw: AutoWalls):
+    process = Popen([f"{aw.script_dir}/timer", str(aw.config["interval"])])
+    aw.timer_pid = process.pid
 
-    if do_notify:
+    if aw.config["notify"]:
         notify(f"Timer started.")
 
-def stop_timer(do_notify: bool, pid: int):
+def stop_timer(aw: AutoWalls):
     try:
-        parent = Process(pid)
+        parent = Process(aw.timer_pid)
 
         for child in parent.children(recursive=True):
             child.kill()
         
         parent.kill()
-        state.timer_pid = -1
+        aw.timer_pid = -1
 
-        if do_notify:
+        if aw.config["notify"]:
             notify("Ending timer...")
             
     except Exception as e:
@@ -30,14 +29,13 @@ def stop_timer(do_notify: bool, pid: int):
             notify(f"Error stopping timer process: {str(e)}")
 
 if __name__ == '__main__':
-    state = State()
-    c = get_config()
+    aw = AutoWalls()
 
     try:
-        if state.timer_pid and pid_exists(state.timer_pid):
-            stop_timer(c["notify"], state.timer_pid)
+        if aw.timer_pid and pid_exists(aw.timer_pid):
+            stop_timer(aw)
         else:
-            start_timer(c["interval"], c["notify"])
+            start_timer(aw)
 
     except ValueError:
-        start_timer(c["interval"], c["notify"])
+        start_timer(aw)
