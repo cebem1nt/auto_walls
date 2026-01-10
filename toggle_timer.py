@@ -10,7 +10,7 @@ def start_timer(interval: str, do_notify: bool):
     state.timer_pid = process.pid
 
     if do_notify:
-        notify(f"Starting timer process with pid: {process.pid}")
+        notify(f"Timer started.")
 
 def stop_timer(do_notify: bool, pid: int):
     try:
@@ -23,7 +23,7 @@ def stop_timer(do_notify: bool, pid: int):
         state.timer_pid = -1
 
         if do_notify:
-            notify("Ending timer process and its children ..")
+            notify("Ending timer...")
             
     except Exception as e:
         if do_notify:

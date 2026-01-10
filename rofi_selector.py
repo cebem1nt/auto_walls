@@ -34,7 +34,10 @@ def get_wallpaper_thumbnail(
 
         return wallpaper_thumbnail
 
-def generate_all_thumbnails(state: State):
+def generate_all_thumbnails(state: State, c: object):
+    if state.wallpapers is None:
+        state.reset_state(expand_path(c["wallpapers_dir"]), c["notify"])
+
     for wallpaper_file in state.wallpapers:
         wallpaper_name = wallpaper_file.split("/")[-1]
         get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
@@ -46,7 +49,7 @@ if __name__ == '__main__':
     state = State()
 
     if sys.argv[-1] == "--gen-thumbnails":
-        generate_all_thumbnails(state)
+        generate_all_thumbnails(state, c)
         sys.exit(0)
 
     wd = expand_path(c["wallpapers_dir"])

@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-
 import os, json, random, sys
 from subprocess import run, Popen
 from psutil import pid_exists, Process
@@ -12,9 +11,10 @@ def expand_path(path: str):
 
 def get_config(file='~/.config/auto_walls/config.json'): 
     file = os.path.expanduser(file)
+    os.makedirs(os.path.dirname(file), exist_ok=True)
 
     default_config = {  
-            "interval"               : 30,
+            "interval"                : 30,
             "wallpapers_dir"          : "~/Pictures",
             "wallpapers_cli"          : "swww img <picture>",
             "keyboard_cli"            : "rogauracore single_static <color>",
@@ -26,26 +26,20 @@ def get_config(file='~/.config/auto_walls/config.json'):
             "rofi_theme"              : ""
         }
 
-    if not os.path.exists(os.path.dirname(file)): 
-        # ensuring that the passed dir exist
-        os.makedirs(os.path.dirname(file))
-        with open(file, 'w') as f:
-            return default_config
-
-    with open(file) as f:
-        try:
+    try:
+        with open(file) as f:
             return json.load(f)
-        except:
-            with open(file, 'w') as wf:
-                json.dump(default_config, wf, indent=4, separators=(', ', ': '))
-            
+    
+    except:
+        with open(file, 'w') as wf:
+            json.dump(default_config, wf, indent=4, separators=(', ', ': '))
             return default_config
 
 class State:    
     root = os.path.expanduser('~/.local/share/auto_walls')
-    _cache = {}
+    cache = {}
 
-    def __init__(self) -> None:
+    def __init__(self):
         self._wallpapers_dir = os.path.join(self.root, 'wallpapers.json')
         self._timer_pid_dir = os.path.join(self.root, 'pid.lock')
         self._index_dir = os.path.join(self.root, 'index')
@@ -54,32 +48,32 @@ class State:
         if not os.path.exists(self.root):
             os.makedirs(self.root)
 
-    def _read_from_file(self, dir: str):
-        if dir in self._cache:
-            return self._cache[dir]
+    def read(self, dir: str):
+        if dir in self.cache:
+            return self.cache[dir]
 
         if not os.path.exists(dir):
             return None
         
         with open(dir) as f:
             content = f.read()
-            try: # Python's isdigit() doesnt fire on -1
+            try:
                 value = int(content)
             except:
                 value = content
 
-        self._cache[dir] = value
+        self.cache[dir] = value
         return value
 
-    def _write_to_file(self, dir: str, value: int | str):
+    def write(self, dir: str, value: int | str):
         with open(dir, 'w') as f:
             f.write(str(value))
-        self._cache[dir] = value
+        self.cache[dir] = value
 
     @property
     def wallpapers(self) -> list[str]:
-        if "wallpapers" in self._cache:
-            return self._cache["wallpapers"]
+        if "wallpapers" in self.cache:
+            return self.cache["wallpapers"]
 
         if not os.path.exists(self._wallpapers_dir):
             return None
@@ -87,8 +81,9 @@ class State:
         with open(self._wallpapers_dir) as f:
             try:
                 wallpapers = json.load(f)
-                self._cache["wallpapers"] = wallpapers
+                self.cache["wallpapers"] = wallpapers
                 return wallpapers
+
             except json.JSONDecodeError:
                 return None
 
@@ -96,31 +91,31 @@ class State:
     def wallpapers(self, val: list[str]) -> None:
         with open(self._wallpapers_dir, 'w') as f:
             json.dump(val, f)
-        self._cache["wallpapers"] = val 
+        self.cache["wallpapers"] = val 
 
     @property
     def timer_pid(self):
-        return self._read_from_file(self._timer_pid_dir)
+        return self.read(self._timer_pid_dir)
 
     @timer_pid.setter
     def timer_pid(self, val: int):
-        self._write_to_file(self._timer_pid_dir, val)
+        self.write(self._timer_pid_dir, val)
 
     @property
     def index(self):
-        return self._read_from_file(self._index_dir)
+        return self.read(self._index_dir)
 
     @index.setter
     def index(self, val: int):
-        self._write_to_file(self._index_dir, val)
+        self.write(self._index_dir, val)
 
     @property
     def prev_kb_color(self):
-        return self._read_from_file(self._prev_kb_color_dir)
+        return self.read(self._prev_kb_color_dir)
 
     @prev_kb_color.setter
     def prev_kb_color(self, val: str):
-        self._write_to_file(self._prev_kb_color_dir, val)
+        self.write(self._prev_kb_color_dir, val)
 
     def reset_state(self, user_wallpapers_dir: str, do_notify=False):
         user_wallpapers_dir = expand_path(user_wallpapers_dir)
@@ -198,12 +193,11 @@ def main():
 
     try:
         if state.timer_pid == -1:
-            # It was turned off on purpose, so do nothing
-            return
+            return print("Timer is turned off")
 
         if (state.timer_pid and state.timer_pid != -1) and pid_exists(state.timer_pid) \
             and os.readlink(f'/proc/{state.timer_pid}/cwd') == script_dir:
-            return
+            return print("Timer is allready running")
 
         process = Popen([os.path.join(script_dir, 'timer'), str(c["interval"])])
         state.timer_pid = process.pid
