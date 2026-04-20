@@ -35,7 +35,14 @@ def _to_cache(key: str, val: str, cache_dir: str):
     with open(os.path.join(cache_dir, cache_key), 'w') as f:
         f.write(val)
 
-def set_backlight(aw: AutoWalls, picture: str, transition: bool, keyboard_cli: str, keyboard_transition_cli: str, transition_duration: float | int):
+def set_backlight(
+    picture: str, 
+    transition: bool, 
+    keyboard_cli: str, 
+    keyboard_transition_cli: str, 
+    transition_duration: float | int,
+    prev_kb_color: str
+) -> str:
     cache_dir = os.path.expanduser('~/.cache/auto_walls/kb_colors')
     color = _in_cache(picture, cache_dir)
 
@@ -45,7 +52,7 @@ def set_backlight(aw: AutoWalls, picture: str, transition: bool, keyboard_cli: s
         _to_cache(picture, color, cache_dir)
 
     if transition:
-        prev_color = aw.prev_kb_color if aw.prev_kb_color else '010101'
+        prev_color = prev_kb_color if prev_kb_color else '010101'
 
         keyboard_transition_cli = keyboard_transition_cli.replace("<prev>", str(prev_color))
         keyboard_transition_cli = keyboard_transition_cli.replace("<color>", color)
@@ -57,4 +64,4 @@ def set_backlight(aw: AutoWalls, picture: str, transition: bool, keyboard_cli: s
     subprocess.run(keyboard_cli.split())
     
     print("changed backlight color to :", color)
-    aw.prev_kb_color = color
+    return color

@@ -46,8 +46,8 @@ class State:
     def __init__(self):
         self._wallpapers_dir = os.path.join(self.root, 'wallpapers.json')
         self._timer_pid_dir = os.path.join(self.root, 'pid.lock')
-        self._index_dir = os.path.join(self.root, 'index')
         self._prev_kb_color_dir = os.path.join(self.root, 'prev_kb')
+        self._index_dir = os.path.join(self.root, 'index')
 
         if not os.path.exists(self.root):
             os.makedirs(self.root)
@@ -151,7 +151,7 @@ class AutoWalls(State):
         if not self.wallpapers:
             self.reset_state()
 
-    def set_wallpaper(self, wallpaper: str, index: int, do_change_index=True):  
+    def set_wallpaper(self, wallpaper: str, do_change_index=True):  
         wallpapers_command = self.config["wallpapers_cli"] 
         wallpaper = expand_path(wallpaper)
 
@@ -180,16 +180,22 @@ class AutoWalls(State):
                     cli[i] = wallpaper
 
             if do_change_index:
-                self.index = index
-                print(f'changed wallpaper, index : {index}')
+                self.index = self.wallpapers.index(wallpaper)
+                print(f'changed wallpaper, index : {self.index}')
 
             subprocess.run(cli)
 
             if self.config["change_backlight"]: 
                 from modules.kb_backlight import set_backlight
 
-                set_backlight(self, wallpaper, 
-                    self.config["backlight_transition"], self.config["keyboard_cli"], self.config["keyboard_transition_cli"], self.config["transition_duration"])
+                self.prev_kb_color = set_backlight(
+                    wallpaper, 
+                    self.config["backlight_transition"], 
+                    self.config["keyboard_cli"], 
+                    self.config["keyboard_transition_cli"], 
+                    self.config["transition_duration"],
+                    self.prev_kb_color
+                )
 
         finally:
             os.remove(lock_file)
@@ -244,9 +250,7 @@ def generate_all_thumbnails(aw: AutoWalls):
         wallpaper_name = wallpaper_file.split("/")[-1]
         get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
 
-def daemon():
-    aw = AutoWalls()
-
+def daemon(aw: AutoWalls):
     try:
         if aw.timer_pid == -1:
             return print("Timer was turned off on purpose")
@@ -262,7 +266,11 @@ def daemon():
         raise e
 
 def set_exact(aw: AutoWalls, wallpaper: str):
-    aw.set_wallpaper(wallpaper, -1, do_change_index=False)
+    wallpaper = expand_path(wallpaper)
+    aw.set_wallpaper(wallpaper, do_change_index=False)
+
+    if wallpaper in aw.wallpapers:
+        aw.index = aw.wallpapers.index(wallpaper)
 
 def rofi(aw: AutoWalls, gen_thumbnails: bool):
     if gen_thumbnails:
@@ -304,8 +312,7 @@ def rofi(aw: AutoWalls, gen_thumbnails: bool):
         wallpaper = selected_option.split('\x00icon\x1f')[0] # Extract wallpaper path
         selected_wallpaper_dir = os.path.join(aw.wallpapers_dir, wallpaper)
         
-        i = aw.wallpapers.index(selected_wallpaper_dir)
-        aw.set_wallpaper(selected_wallpaper_dir, i)
+        aw.set_wallpaper(selected_wallpaper_dir)
 
 def set_next(aw: AutoWalls):
     do_notify = aw.config["notify"]
@@ -316,17 +323,16 @@ def set_next(aw: AutoWalls):
         aw.reset_state()
         i = 0
 
-    aw.set_wallpaper(aw.wallpapers[i], i)
+    aw.set_wallpaper(aw.wallpapers[i])
 
 def set_prev(aw: AutoWalls):
     if aw.index <= 0: # allready first wallpaper
         aw.reset_state()
         i = len(aw.wallpapers) - 1 # going from the end
-
     else:
         i = aw.index - 1  # setting wallpaper that was before 
 
-    aw.set_wallpaper(aw.wallpapers[i], i)
+    aw.set_wallpaper(aw.wallpapers[i])
 
 
 def start_timer(aw: AutoWalls):
@@ -375,7 +381,7 @@ def main(args: argparse.Namespace):
         case "next":   set_next(instance)
         case "prev":   set_prev(instance)
         case "set":    set_exact(instance, args.wallpaper)
-        case _:        daemon()
+        case _:        daemon(instance)
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(
