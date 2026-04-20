@@ -1,58 +1,33 @@
 # Auto walls
-**When using a window manager, wallpapers is a part of it. Maybe you want a menu to choose wallpaper, shuffling, automatically change them, match keyboard backlight to wallpaper's best color, setting next/previous. If so, this is what you're looking for! Auto walls is a Linux wallpaper system for any window manager: flexible and customizable, written entirely in Python.**
 
-## Features
+## What the hell is this?
 
-- Automatically sets random wallpaper every n minutes.
-- Sets keyboard backlight color based on the wallpaper.
-- Provides scripts for setting previous and next wallpapers.
-- Provides Rofi menu script to select wallpaper.
+**Some day 2 years ago**:
 
-## About
+> Hmmmm, I need a script, that would ***set random wallpaper once in N minutes***, 
+> but also, I might ***set previous wallpaper or the next one**, And I might
+> ***pipe the currentlist of wallpapers into rofi to pick the specific one if I want***. 
+> And the icing on the cake - ***It should detect the dominant color of the wallpaper*** 
+> ***and set it as backlight color for my keyboard with a fancy transition. ***  
 
-A collection of scripts including a main script launched at startup, scripts to set previous and next wallpapers, a script to run a Rofi menu with wallpaper options, and adaptive keyboard backlight module. If `change_backlight` in the config is set to true, the backlight changes based on the dominant color from the wallpaper image. Initially used with `swww` and `rogauracore` (ASUS ROG laptops) to changie wallpaper and keyboard backlight color, but can be configured to use with any other cli tool
+Familiar? Probably not, but if so, this is my solution for a problem
 
-## Default Requirements
+## Requirements
 
-- [swww](https://github.com/LGFae/swww): Wayland wallpapers tool.
-- [rogauracore](https://github.com/wroberts/rogauracore): CLI tool for changing keyboard color on ASUS ROG laptops.
-- [rofi](https://github.com/davatorium/rofi): Required for the wallpapers menu.
-- [ffmpeg](https://github.com/FFmpeg/FFmpeg): For thumbnails generation
-
-## Python Libraries
+If you will use the color detection, install these python libraries:
 
 ### pip
-
 ```bash
 pip install numpy Pillow scikit-learn
 ```
 
 ### Arch Linux
-
 ```bash
 sudo pacman -S python-numpy python-scikit-learn python-pillow
 ```
 
-## Usage
-
-Clone this repository and execute the main script (`auto_walls.py`) on startup with your window manager. It will change wallpapers at specified intervals and provide functions for dynamic backlight color and setting next/previous wallpapers. Bind `set_next.py` and `set_previous.py` for controlling wallpaper changes and `rofi_selector.py` for toggling the wallpaper menu.
-
-## Example on Hyprland:
-
-```ini
-exec-once = python3 ~/your/path/to/auto_walls/auto_walls.py
-
-bind = ALT, F5,       exec, python3 ~/your/path/to/auto_walls/set_next.py
-bind = ALT SHIFT, F5, exec, python3 ~/your/path/to/auto_walls/set_prev.py
-
-bind = SUPER, Y, exec, python3 ~/your/path/to/auto_walls/rofi_selector.py
-```
-
-> **Note:** It's strongly recommended to run `auto_walls.py` from the terminal for the first time.
-
-## Example Config
-
-After the first run of `auto_walls.py`, the following config will be generated at `~/.config/auto_walls/config.json` by default:
+## Configuration
+Firstly after the installation, run `auto_walls.py` from the terminal. The following config will be generated at `~/.config/auto_walls/config.json`:
 
 ```json
 {
@@ -78,4 +53,37 @@ After the first run of `auto_walls.py`, the following config will be generated a
 - **"change_backlight"**: Enable/disable keyboard backlight changes.
 - **"notify"**: Enable/disable notifications.
 - **"backlight_transition"**: Enable/disable backlight transition effects.
-- **"rofi-theme"**: Path to a custom Rofi theme when using `rofi_selector.py`; leave empty for default theme..
+- **"rofi-theme"**: Path to a custom Rofi theme when using `auto_walls.py rofi`; leave empty for default theme.
+
+## Usage
+
+You can run `auto_walls.py` on startup according to your window manager configuration. This will execute the daemon that switches wallpapers once at the interval set in config file. Use `auto_walls.py rofi` to pipe the current wallpapers list into the rofi theme set in config file. `auto_walls.py next` sets next wallpaper, `auto_walls.py prev` sets previous wallpaper.
+
+### Example on Hyprland:
+
+```ini
+exec-once = python3 ~/your/path/to/auto_walls/auto_walls.py
+
+bind = ALT, F5,       exec, python3  ~/your/path/to/auto_walls/auto_walls.py next
+bind = ALT SHIFT, F5, exec, python3  ~/your/path/to/auto_walls/auto_walls.py prev
+
+bind = SUPER, Y, exec, python3 ~/your/path/to/auto_walls/auto_walls.py rofi
+```
+
+```
+usage: auto_walls.py [-h] {rofi,set,next,prev,toggle} ...
+
+Multi tool and a wallpapers manager for a WM
+
+positional arguments:
+  {rofi,set,next,prev,toggle}
+                        Available commands
+    rofi                Pipe current wallpapers to a rofi
+    set                 Set given wallpaper
+    next                Set next wallpaper
+    prev                Set previous wallpaper
+    toggle              Toggle background daemon on/off
+
+options:
+  -h, --help            show this help message and exit
+```

@@ -385,7 +385,7 @@ def main(args: argparse.Namespace):
 
 if __name__ == '__main__':
     p = argparse.ArgumentParser(
-        description="A multi tool, wallpapers manager for a WM"
+        description="Multi tool and a wallpapers manager for a WM"
     )
 
     subps = p.add_subparsers(dest="command", help="Available commands")
