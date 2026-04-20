@@ -5,10 +5,10 @@
 **Some day 2 years ago**:
 
 > Hmmmm, I need a script, that would ***set random wallpaper once in N minutes***, 
-> but also, I might ***set previous wallpaper or the next one**, And I might
+> but also, I might ***set previous wallpaper or the next one***, And I might
 > ***pipe the currentlist of wallpapers into rofi to pick the specific one if I want***. 
 > And the icing on the cake - ***It should detect the dominant color of the wallpaper*** 
-> ***and set it as backlight color for my keyboard with a fancy transition. ***  
+> ***and set it as backlight color for my keyboard with a fancy transition.***  
 
 Familiar? Probably not, but if so, this is my solution for a problem
 
