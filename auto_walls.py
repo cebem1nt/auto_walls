@@ -40,7 +40,7 @@ def get_config(file='~/.config/auto_walls/config.json'):
             return default_config
 
 class State:    
-    root = os.path.expanduser('~/.local/share/auto_walls')
+    root = os.path.expanduser('~/.local/state/auto_walls')
     cache = {}
 
     def __init__(self):
@@ -158,7 +158,7 @@ class AutoWalls(State):
         if not os.path.exists(wallpaper):
             self.reset_state()
 
-        lock_file = os.path.expanduser('~/.local/share/auto_walls/auto_walls.lock')
+        lock_file = os.path.expanduser('~/.local/state/auto_walls/auto_walls.lock')
 
         if os.path.exists(lock_file):
             with open(lock_file) as f:
