@@ -3,6 +3,5 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 while true ; do
     sleep $(( "$1" * 60 ))
-    python3 $SCRIPT_DIR/set_next.py
-
+    python3 $SCRIPT_DIR/auto_walls.py next
 done

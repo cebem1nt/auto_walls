@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
-import os, json, random, sys
-from subprocess import run, Popen
+import os, json, random, sys, argparse, signal, subprocess
 from psutil import pid_exists, Process
 
 def notify(message: str, lvl='normal'):
-    Popen(["notify-send", message, "auto_walls", "-a", "wallpaper", "-u", lvl, "-i", "preferences-desktop-wallpaper"])
+    subprocess.Popen([
+        "notify-send", message, "auto_walls", 
+            "-a", sys.argv[0], 
+            "-i", "preferences-desktop-wallpaper",
+            "-u", lvl, 
+    ])
 
 def expand_path(path: str):
     return os.path.expandvars(os.path.expanduser(path))
@@ -14,17 +18,17 @@ def get_config(file='~/.config/auto_walls/config.json'):
     os.makedirs(os.path.dirname(file), exist_ok=True)
 
     default_config = {  
-            "interval"                : 30,
-            "wallpapers_dir"          : "~/Pictures",
-            "wallpapers_cli"          : "swww img <picture>",
-            "keyboard_cli"            : "rogauracore single_static <color>",
-            "keyboard_transition_cli" : "rogauracore single_breathing <prev> <color> 3",
-            "transition_duration"     : 1.1,
-            "change_backlight"        : False,
-            "notify"                  : True,
-            "backlight_transition"    : False,
-            "rofi_theme"              : ""
-        }
+        "interval"                : 30,
+        "wallpapers_dir"          : "~/Pictures",
+        "wallpapers_cli"          : "swww img <picture>",
+        "keyboard_cli"            : "rogauracore single_static <color>",
+        "keyboard_transition_cli" : "rogauracore single_breathing <prev> <color> 3",
+        "transition_duration"     : 1.1,
+        "change_backlight"        : False,
+        "notify"                  : True,
+        "backlight_transition"    : False,
+        "rofi_theme"              : ""
+    }
 
     try:
         with open(file) as f:
@@ -125,7 +129,7 @@ class State:
             notify("Shuffling wallpapers..")
 
         for w in os.listdir(user_wallpapers_dir):
-            w = os.path.join(user_wallpapers_dir, w) # completed dir for each wallpaper
+            w = os.path.join(user_wallpapers_dir, w) # complete dir for each wallpaper
             if os.path.isfile(w): 
                 wallpapers.append(w)
 
@@ -179,7 +183,7 @@ class AutoWalls(State):
                 self.index = index
                 print(f'changed wallpaper, index : {index}')
 
-            run(cli)
+            subprocess.run(cli)
 
             if self.config["change_backlight"]: 
                 from modules.kb_backlight import set_backlight
@@ -209,7 +213,38 @@ class AutoWalls(State):
     def reset_state(self):
         self._reset_state(self.wallpapers_dir, self.config["notify"])
 
-def main():
+def get_wallpaper_thumbnail(
+    wallpaper_file: str, 
+    wallpaper_name: str, 
+    max_size=500, 
+    quality=5
+):
+    cache_dir = os.path.expanduser('~/.cache/auto_walls/thumbnails')
+    wallpaper_thumbnail = os.path.join(cache_dir, wallpaper_name)
+
+    os.makedirs(cache_dir, exist_ok=True)
+
+    if os.path.exists(wallpaper_thumbnail):
+        return wallpaper_thumbnail
+
+    else:
+        subprocess.run([
+            "ffmpeg", 
+            "-i", wallpaper_file, 
+            "-vf", f"scale='if(gt(iw,ih),{max_size},-1)':'if(gt(iw,ih),-1,{max_size})'", 
+            "-frames:v", "1", 
+            "-q:v", str(quality), 
+            wallpaper_thumbnail
+        ])
+
+        return wallpaper_thumbnail
+
+def generate_all_thumbnails(aw: AutoWalls):
+    for wallpaper_file in aw.wallpapers:
+        wallpaper_name = wallpaper_file.split("/")[-1]
+        get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
+
+def daemon():
     aw = AutoWalls()
 
     try:
@@ -219,12 +254,144 @@ def main():
         if aw.is_timer_running():
             return print("Timer is allready running")
 
-        process = Popen([os.path.join(aw.script_dir, 'timer'), str(aw.config["interval"])])
+        process = subprocess.Popen([os.path.join(aw.script_dir, 'timer'), str(aw.config["interval"])])
         aw.timer_pid = process.pid
         print(f"New timer process started with pid: {process.pid}")
         
     except Exception as e:
         raise e
 
+def set_exact(aw: AutoWalls, wallpaper: str):
+    aw.set_wallpaper(wallpaper, -1, do_change_index=False)
+
+def rofi(aw: AutoWalls, gen_thumbnails: bool):
+    if gen_thumbnails:
+        generate_all_thumbnails(aw)
+        sys.exit(0)
+
+    rofi_theme = aw.config["rofi_theme"] if aw.config["rofi_theme"] else ' '
+
+    if aw.has_new_wallpapers():
+        aw.reset_state()
+
+    opts = ""
+    prev = signal.getsignal(signal.SIGTERM)
+    signal.signal(signal.SIGTERM, signal.SIG_IGN) # Ignore sigterm in this section
+
+    for wallpaper_file in aw.wallpapers:
+        wallpaper_name = wallpaper_file.split("/")[-1]
+        wallpaper_thumbnail = get_wallpaper_thumbnail(wallpaper_file, wallpaper_name)
+
+        opts += f"{wallpaper_name}\x00icon\x1f{wallpaper_thumbnail}\n"
+
+    signal.signal(signal.SIGTERM, prev)
+
+    rofi_process = subprocess.Popen(
+        ["rofi", "-dmenu", "-i", "-selected-row", str(aw.index), "-theme", rofi_theme],
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        text=True
+    )
+
+    # Pass wallpapers with thumbnails to Rofi
+    rofi_process.stdin.write(opts)
+    selected_option, _ = rofi_process.communicate()
+    selected_option = selected_option.strip()
+
+    # Check if a wallpaper was selected
+    if selected_option:
+        wallpaper = selected_option.split('\x00icon\x1f')[0] # Extract wallpaper path
+        selected_wallpaper_dir = os.path.join(aw.wallpapers_dir, wallpaper)
+        
+        i = aw.wallpapers.index(selected_wallpaper_dir)
+        aw.set_wallpaper(selected_wallpaper_dir, i)
+
+def set_next(aw: AutoWalls):
+    do_notify = aw.config["notify"]
+
+    i = aw.index + 1
+
+    if i >= len(aw.wallpapers):
+        aw.reset_state()
+        i = 0
+
+    aw.set_wallpaper(aw.wallpapers[i], i)
+
+def set_prev(aw: AutoWalls):
+    if aw.index <= 0: # allready first wallpaper
+        aw.reset_state()
+        i = len(aw.wallpapers) - 1 # going from the end
+
+    else:
+        i = aw.index - 1  # setting wallpaper that was before 
+
+    aw.set_wallpaper(aw.wallpapers[i], i)
+
+
+def start_timer(aw: AutoWalls):
+    process = subprocess.Popen([
+        f"{aw.script_dir}/timer", str(aw.config["interval"])
+    ])
+
+    aw.timer_pid = process.pid
+
+    if aw.config["notify"]:
+        notify(f"Timer started.")
+
+def stop_timer(aw: AutoWalls):
+    try:
+        parent = Process(aw.timer_pid)
+
+        for child in parent.children(recursive=True):
+            child.kill()
+        
+        parent.kill()
+        aw.timer_pid = -1
+
+        if aw.config["notify"]:
+            notify("Ending timer...")
+            
+    except Exception as e:
+        if do_notify:
+            notify(f"Error stopping timer process: {str(e)}")
+
+def toggle(aw: AutoWalls):
+    try:
+        if aw.timer_pid and pid_exists(aw.timer_pid):
+            stop_timer(aw)
+        else:
+            start_timer(aw)
+
+    except ValueError:
+        start_timer(aw)
+
+def main(args: argparse.Namespace):
+    instance = AutoWalls()
+
+    match args.command:
+        case "toggle": toggle(instance)
+        case "rofi":   rofi(instance, args.gen_thumbnails)
+        case "next":   set_next(instance)
+        case "prev":   set_prev(instance)
+        case "set":    set_exact(instance, args.wallpaper)
+        case _:        daemon()
+
 if __name__ == '__main__':
-    main()
+    p = argparse.ArgumentParser(
+        description="A multi tool, wallpapers manager for a WM"
+    )
+
+    subps = p.add_subparsers(dest="command", help="Available commands")
+
+    rofi_p = subps.add_parser("rofi", help="Pipe current wallpapers to a rofi")
+    rofi_p.add_argument      ("--gen-thumbnails",  action="store_true", help="Generate thumbnails only")
+
+    set_p = subps.add_parser("set",  help="Set given wallpaper")
+    set_p.add_argument      ("wallpaper",  metavar="WALLPAPER", type=str, help="Wallpaper path")
+
+    next_p   = subps.add_parser("next",   help="Set next wallpaper")
+    prev_p   = subps.add_parser("prev",   help="Set previous wallpaper")
+    toggle_p = subps.add_parser("toggle", help="Toggle background daemon on/off")
+
+    main(p.parse_args())
