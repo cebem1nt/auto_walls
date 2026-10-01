@@ -57,11 +57,11 @@ def set_backlight(
         keyboard_transition_cli = keyboard_transition_cli.replace("<prev>", str(prev_color))
         keyboard_transition_cli = keyboard_transition_cli.replace("<color>", color)
 
-        subprocess.run(keyboard_transition_cli.split())
+        subprocess.run(keyboard_transition_cli, shell=True)
         time.sleep(transition_duration)
 
     keyboard_cli = keyboard_cli.replace("<color>", color)
-    subprocess.run(keyboard_cli.split())
+    subprocess.run(keyboard_cli, shell=True)
     
     print("changed backlight color to :", color)
     return color

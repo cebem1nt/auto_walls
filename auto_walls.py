@@ -173,31 +173,13 @@ class AutoWalls(State):
             with open(lock_file, 'w') as f:
                 f.write(str(os.getpid()))
 
-            cli: list[str] = wallpapers_command.split()
-            
-            for i, cli_part in enumerate(cli):
-                if cli_part == "<picture>":
-                    cli[i] = wallpaper
+            cli = wallpapers_command.replace("<picture>", wallpaper) 
 
             if do_change_index:
                 self.index = self.wallpapers.index(wallpaper)
                 print(f'changed wallpaper, index : {self.index}')
 
-            subprocess.run(cli)
-
-            # A non shady integration with my other script. Stores current colorscheme
-            # This one is needed in order to persist previously selected wallpaper for 
-            # light/dark schemes. Wallpaper theme switching script can read it and set. 
-            themesw_color_scheme = os.path.expanduser("~/.config/themesw/current")
-
-            if os.path.isfile(themesw_color_scheme):
-                scheme = None
-                
-                with open(themesw_color_scheme, 'r') as f:
-                    scheme = f.read().strip()
-
-                with open(os.path.join(self.root, f"wallpaper.last.{scheme}"), 'w') as f:
-                    f.write(wallpaper)
+            subprocess.run(cli, shell=True)
 
             if self.config["change_backlight"]: 
                 from modules.kb_backlight import set_backlight
